@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ripples · Phone preview</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, -apple-system, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; color: #e6f8f8; background: radial-gradient(circle at 50% 0%, #174453, #091d2c 55%); }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 24px; border-bottom: 1px solid #ffffff26; }
+    h1 { margin: 0; font-size: 17px; font-weight: 650; }
+    p { margin: 4px 0 0; color: #a9c9d0; font-size: 13px; }
+    .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    select, a { color: #e6f8f8; background: #183849; border: 1px solid #ffffff42; border-radius: 9px; padding: 9px 12px; font: inherit; font-size: 13px; text-decoration: none; }
+    a:hover, select:hover { border-color: #75d8da; }
+    main { display: grid; place-items: start center; padding: 28px 16px 48px; overflow: auto; }
+    .phone { width: calc(var(--screen-width) + 18px); height: calc(var(--screen-height) + 18px); padding: 9px; border: 2px solid #536a73; border-radius: 34px; background: #11232d; box-shadow: 0 25px 80px #0009, inset 0 0 0 2px #243f4b; }
+    iframe { display: block; width: var(--screen-width); height: var(--screen-height); border: 0; border-radius: 25px; background: #f5fbfc; }
+    @media (max-width: 460px) { header { align-items: flex-start; flex-direction: column; } main { padding-left: 0; padding-right: 0; } .phone { transform: scale(.87); transform-origin: top center; margin-bottom: -100px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div><h1>Ripples · Phone preview</h1><p>Edits appear here automatically after you save a page file.</p></div>
+    <div class="controls">
+      <label for="device">Screen</label>
+      <select id="device" aria-label="Phone screen size">
+        <option value="393x852">iPhone · 393 × 852</option>
+        <option value="360x800">Small Android · 360 × 800</option>
+        <option value="430x932">Large phone · 430 × 932</option>
+      </select>
+      <a id="full-page" href="/" target="_blank" rel="noopener">Open full page ↗</a>
+    </div>
+  </header>
+  <main><div class="phone" id="phone"><iframe id="screen" src="/" title="Ripples mobile app preview"></iframe></div></main>
+  <script>
+    const device = document.getElementById('device');
+    const phone = document.getElementById('phone');
+    const screen = document.getElementById('screen');
+    function resize() {
+      const [width, height] = device.value.split('x');
+      phone.style.setProperty('--screen-width', width + 'px');
+      phone.style.setProperty('--screen-height', height + 'px');
+    }
+    device.addEventListener('change', resize);
+    resize();
+    let lastVersion = null;
+    async function checkForEdits() {
+      try {
+        const response = await fetch('/__version', { cache: 'no-store' });
+        if (!response.ok) return;
+        const version = await response.text();
+        if (lastVersion !== null && version !== lastVersion) screen.contentWindow.location.reload();
+        lastVersion = version;
+      } catch { /* The local server may be restarting. */ }
+    }
+    checkForEdits();
+    setInterval(checkForEdits, 1200);
+  </script>
+</body>
+</html>

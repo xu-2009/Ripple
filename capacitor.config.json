@@ -1,0 +1,6 @@
+{
+  "appId": "org.ripples.utah",
+  "appName": "Ripples",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}

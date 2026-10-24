@@ -1,0 +1,55 @@
+{
+  "time": "2026-10-22T19:06:45.548Z",
+  "passed": 12,
+  "total": 12,
+  "results": [
+    {
+      "name": "Official 29 county geometry loads and source is visible",
+      "status": "PASS"
+    },
+    {
+      "name": "Map selects any county by dropdown and path and persists selection",
+      "status": "PASS"
+    },
+    {
+      "name": "County map supports keyboard selection and keeps focus",
+      "status": "PASS"
+    },
+    {
+      "name": "Electricity toggle labels statewide context without inventing county figures",
+      "status": "PASS"
+    },
+    {
+      "name": "Action recommendations reflect lawn and can be saved completed reset and removed",
+      "status": "PASS"
+    },
+    {
+      "name": "Simulator household input updates estimates without creating measured bills",
+      "status": "PASS"
+    },
+    {
+      "name": "Water reacts to pointer and ripple press in regular motion mode",
+      "status": "PASS"
+    },
+    {
+      "name": "Secure-context tilt permission and orientation events move the water",
+      "status": "PASS"
+    },
+    {
+      "name": "Reduced motion prevents pointer movement animation",
+      "status": "PASS"
+    },
+    {
+      "name": "P1 map and action pages have no horizontal overflow at 320",
+      "status": "PASS"
+    },
+    {
+      "name": "P1 map and action pages have no horizontal overflow at 393",
+      "status": "PASS"
+    },
+    {
+      "name": "P1 map and action pages have no horizontal overflow at 1280",
+      "status": "PASS"
+    }
+  ]
+}

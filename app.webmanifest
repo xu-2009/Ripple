@@ -1,0 +1,16 @@
+{
+  "id": "/",
+  "name": "Ripples — Small changes. Bigger impact.",
+  "short_name": "Ripples",
+  "description": "Understand household water and electricity use in Utah.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#e8f5f5",
+  "theme_color": "#083d56",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

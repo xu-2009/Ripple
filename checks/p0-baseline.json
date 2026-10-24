@@ -1,0 +1,116 @@
+{
+  "date": "2026-10-19T05:50:38.031Z",
+  "url": "http://127.0.0.1:5178/",
+  "passed": 22,
+  "total": 26,
+  "results": [
+    {
+      "name": "Empty state and all five navigation destinations",
+      "status": "PASS"
+    },
+    {
+      "name": "Profile edits persist and affect per-person values",
+      "status": "PASS"
+    },
+    {
+      "name": "Water bill add, unit conversions, cost, edit, cancel and reload",
+      "status": "PASS"
+    },
+    {
+      "name": "Duplicate same-type month asks before replace; types are independent",
+      "status": "PASS"
+    },
+    {
+      "name": "Changing a bill month into another month confirms replacement",
+      "status": "PASS"
+    },
+    {
+      "name": "Delete cancellation, confirmation and persisted deletion",
+      "status": "PASS"
+    },
+    {
+      "name": "Validation blocks negative usage, fractional days and zero residents",
+      "status": "PASS"
+    },
+    {
+      "name": "Zero-use bill accepted; zero baseline never gives Infinity",
+      "status": "FAIL",
+      "error": "Expected values to be strictly equal:\n\n0 !== 1\n"
+    },
+    {
+      "name": "Different billing lengths, daily change and chronological sorting",
+      "status": "PASS"
+    },
+    {
+      "name": "Electricity comparison uses billing days and sourced 774 kWh reference",
+      "status": "PASS"
+    },
+    {
+      "name": "Annual graph available at 12 months and weighted by recorded days",
+      "status": "PASS"
+    },
+    {
+      "name": "Add a bill after leaving edit mode creates a new entry",
+      "status": "FAIL",
+      "error": "Expected values to be strictly equal:\n\n1 !== 0\n"
+    },
+    {
+      "name": "Corrupt JSON recovers to a usable empty screen",
+      "status": "PASS"
+    },
+    {
+      "name": "Invalid persisted navigation/profile/entry fields cannot blank the app",
+      "status": "FAIL",
+      "error": "Expected values to be strictly equal:\n\n0 !== 1\n"
+    },
+    {
+      "name": "Storage failure is surfaced without a false saved message",
+      "status": "PASS"
+    },
+    {
+      "name": "User-entered location renders as text, never HTML",
+      "status": "PASS"
+    },
+    {
+      "name": "Keyboard navigation retains visible focus after rerender",
+      "status": "FAIL",
+      "error": "Expected values to be strictly equal:\n\nnull !== 'usage'\n"
+    },
+    {
+      "name": "Reduced motion disables looping animations",
+      "status": "PASS"
+    },
+    {
+      "name": "Simulator uses household size and estimates stay separate from bills",
+      "status": "PASS"
+    },
+    {
+      "name": "Responsive navigation and content at 320px",
+      "status": "PASS"
+    },
+    {
+      "name": "Responsive navigation and content at 360px",
+      "status": "PASS"
+    },
+    {
+      "name": "Responsive navigation and content at 393px",
+      "status": "PASS"
+    },
+    {
+      "name": "Responsive navigation and content at 430px",
+      "status": "PASS"
+    },
+    {
+      "name": "Responsive navigation and content at 768px",
+      "status": "PASS"
+    },
+    {
+      "name": "Responsive navigation and content at 1280px",
+      "status": "PASS"
+    },
+    {
+      "name": "Phone preview loads same app at selected screen sizes",
+      "status": "PASS"
+    }
+  ]
+}

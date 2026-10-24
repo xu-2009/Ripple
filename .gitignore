@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env.*
+!.env.example
+checks/*-actual.png
+.DS_Store
+
+dist/
+checks/*.png
+deliverables/*.mp4
+deliverables/*.webm

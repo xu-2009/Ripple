@@ -1,0 +1,27 @@
+{
+  "name": "ripples-demo",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "build": "node scripts/build-static.mjs",
+    "test": "node --test checks/data-core.test.mjs",
+    "test:database": "node checks/database.test.mjs",
+    "test:p0": "node checks/p0-acceptance.cjs",
+    "test:p1": "node checks/p1-acceptance.cjs",
+    "test:p2": "node checks/p2-acceptance.cjs",
+    "mobile:sync": "npm run build && cap sync",
+    "mobile:ios": "npm run mobile:sync && cap open ios",
+    "mobile:android": "npm run mobile:sync && cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5"
+  }
+}

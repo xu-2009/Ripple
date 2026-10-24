@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-13",
+  "retrievedAt": "2026-10-19",
+  "D1": 100,
+  "D2": 71.44,
+  "D3": 22.52,
+  "source": "https://usdmdataservices.unl.edu/api/StateStatistics/GetDroughtSeverityStatisticsByAreaPercent?aoi=49&startdate=10/01/2026&enddate=10/19/2026&statisticsType=1",
+  "definition": "Cumulative percent of Utah land area in the indicated drought category or worse; not household use."
+}

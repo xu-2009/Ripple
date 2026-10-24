@@ -1,0 +1,65 @@
+{
+  "at": "2026-10-22T19:05:35.890Z",
+  "results": [
+    {
+      "name": "CSV preview, duplicate skip, confirmed import and reload",
+      "status": "PASS"
+    },
+    {
+      "name": "Invalid import is rejected without changing bills",
+      "status": "PASS"
+    },
+    {
+      "name": "Water comparison uses the sourced 2015 Utah residential reference",
+      "status": "PASS"
+    },
+    {
+      "name": "Reduction goal reaches completion using target month and persists",
+      "status": "PASS"
+    },
+    {
+      "name": "Forecast renders from sufficient history without adding synthetic bills",
+      "status": "PASS"
+    },
+    {
+      "name": "Irrigation inclusion advice is correct in both settings",
+      "status": "PASS"
+    },
+    {
+      "name": "Reduced motion preference survives reload",
+      "status": "PASS"
+    },
+    {
+      "name": "Bar charts expose values to keyboard and return to line view",
+      "status": "PASS"
+    },
+    {
+      "name": "Fixture estimate uses flow difference and never reports negative savings",
+      "status": "PASS"
+    },
+    {
+      "name": "Official snapshot fallback is dated and separated from demo leaderboard",
+      "status": "PASS"
+    },
+    {
+      "name": "Simulated cloud transport isolates guest data and detects a conflicting version",
+      "status": "PASS"
+    },
+    {
+      "name": "Cloud changes on another device cannot overwrite unsent local data",
+      "status": "PASS"
+    },
+    {
+      "name": "All five pages fit width 320",
+      "status": "PASS"
+    },
+    {
+      "name": "All five pages fit width 393",
+      "status": "PASS"
+    },
+    {
+      "name": "All five pages fit width 1280",
+      "status": "PASS"
+    }
+  ]
+}

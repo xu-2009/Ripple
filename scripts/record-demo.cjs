@@ -1,0 +1,46 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const base = process.env.RIPPLES_URL || 'http://127.0.0.1:5178/';
+const output = process.env.DEMO_VIDEO_PATH || path.join(__dirname, '..', 'deliverables', 'ripples-demo-footage.webm');
+const csvRows = ['type,month,days,quantity,unit,cost',
+  'water,2026-01,31,5800,gal,', 'electricity,2026-01,31,760,kWh,'].join('\r\n');
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+(async () => {
+  fs.mkdirSync(path.dirname(output), { recursive: true });
+  const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROME_PATH || undefined, args: ['--no-sandbox'] });
+  const context = await browser.newContext({ viewport: { width: 1365, height: 850 }, deviceScaleFactor: 1, recordVideo: { dir: path.dirname(output), size: { width: 1365, height: 850 } } });
+  const page = await context.newPage();
+  page.setDefaultTimeout(7000);
+  page.on('dialog', dialog => dialog.accept());
+  await page.goto(base, { waitUntil: 'networkidle' });
+  await sleep(5000);
+  await page.locator('.nav-list [data-nav="usage"]').click();
+  await sleep(3000);
+  await page.locator('[data-load-sample]').click();
+  await sleep(7000);
+  await page.locator('.usage-import summary').click();
+  await page.locator('[data-import-csv]').setInputFiles({ name: 'fictional-additional-bills.csv', mimeType: 'text/csv', buffer: Buffer.from(csvRows) });
+  await sleep(8000);
+  await page.locator('[data-extra="import-confirm"]').click();
+  await sleep(8000);
+  await page.locator('[data-resource="electricity"]').click();
+  await sleep(8000);
+  await page.locator('.nav-list [data-nav="ripple"]').click();
+  await page.locator('[data-sim="current"]').evaluate(el => { el.value = '14'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.locator('[data-sim="target"]').evaluate(el => { el.value = '7'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.locator('[data-sim="household"]').evaluate(el => { el.value = '3'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.locator('[data-sim="flow"]').evaluate(el => { el.value = '2.5'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  await sleep(10000);
+  await page.locator('.nav-list [data-nav="map"]').click();
+  await page.locator('[data-region="Utah"]').waitFor({ state: 'attached' });
+  await page.locator('[data-region="Utah"]').click();
+  await sleep(10000);
+  await page.locator('.nav-list [data-nav="home"]').click();
+  await sleep(8000);
+  await context.close();
+  const recorded = await page.video().path();
+  if (recorded !== output) { fs.copyFileSync(recorded, output); fs.unlinkSync(recorded); }
+  await browser.close();
+  console.log(JSON.stringify({ output, bytes: fs.statSync(output).size }));
+})().catch(error => { console.error(error); process.exit(1); });
