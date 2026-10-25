@@ -9,3 +9,4 @@ dist/
 checks/*.png
 deliverables/*.mp4
 deliverables/*.webm
+.vercel/

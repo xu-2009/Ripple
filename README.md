@@ -22,6 +22,8 @@ On iPhone, open the HTTPS site in Safari and choose Share → Add to Home Screen
 
 For a connected Netlify deployment, `netlify.toml` builds `dist/` and bundles the existing drought function. A manual upload of only `dist/` provides the saved drought snapshot without the live function.
 
+For Vercel, `vercel.json` selects the static build in `dist/`; `api/drought.mjs` serves the same live drought endpoint. Connect this GitHub repository to Vercel and set the project root to the repository root. Each push to `main` then deploys the site.
+
 ## What works
 
 - Five responsive navigation pages.
