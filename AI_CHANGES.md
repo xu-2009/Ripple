@@ -96,3 +96,11 @@ Student team review needed: verify calculations with sample utility bills, revie
 - Moved the water-level readout, sample slider, and tilt control beneath the Home water tank so the moving surface remains unobstructed; removed the dark bordered overlay panel.
 
 - Prepared Ripples as an installable PWA: manifest, icon sizes, root service worker with offline shell, static build with cloud configuration omitted, and Netlify build/function configuration. Live drought remains network-only with the existing dated snapshot fallback.
+
+## 2026-10-25 — Release debug pass
+
+- Added reproducible Playwright and PGlite development dependencies, replacing a missing temporary PGlite path. Updated P0 checks for the water-level readout and slider that the student requested to remove.
+- Added an isolated SQL check for the 1,059 fictional showcase records, idempotent reseeding, public aggregate access and private table access. Re-ran calculation, P0, P1 and P2 browser checks.
+- Improved Home water-overlay text contrast and the 320px card-heading layout after visual inspection. Kept the display's 50% no-bill starting level and bill-derived level behavior.
+- Moved Capacitor CLI to development dependencies. The official npm audit found no vulnerabilities in production dependencies; the native build toolchain retains a moderate transitive advisory.
+- Clarified the README and P2 status. Live multi-account behavior and the final contest materials remain student review tasks.

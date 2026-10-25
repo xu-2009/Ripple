@@ -7,12 +7,14 @@ Utah household water and electricity conservation app for Congressional App Chal
 Install Node.js, open Terminal in this folder, and run:
 
 ```bash
+npm ci
 npm run dev
 ```
 
-Open <http://127.0.0.1:5178/> for the app or <http://127.0.0.1:5178/preview.html> for a phone frame. No `npm ci` is needed. `npm test` runs pure calculation checks.
+Open <http://127.0.0.1:5178/> for the app or <http://127.0.0.1:5178/preview.html> for a phone frame. `npm ci` installs the locked dependencies for browser checks and native builds. `npm test` runs pure calculation checks.
+For the browser acceptance scripts, run `npx playwright install chromium` once, then `npm run test:p0`, `npm run test:p1`, and `npm run test:p2` while the local server is running. `npm run test:database` uses an isolated in-memory PostgreSQL instance and never writes to Supabase.
 
-The default Home card is a rectangular water tank that fills from the latest water bill normalized to a 30.44-day month. Without a bill, a sample slider lets you preview levels without saving data. The visual scale is the household water goal, or a labeled historical Utah reference when no goal is set. Layered waves move gently, and pointer movement or enabled phone tilt makes the surface slosh and settle; reduced-motion settings keep it still.
+The default Home card is a rectangular water tank that fills from the latest water bill normalized to a 30.44-day month. Without a bill, the tank starts at a 50% illustrative level. The visual scale is the household water goal, or a labeled historical Utah reference when no goal is set. Layered waves move gently, and pointer movement or enabled phone tilt makes the surface slosh and settle; reduced-motion settings keep it still.
 
 ## Installable phone app (PWA)
 
@@ -64,7 +66,7 @@ Sources and calculation decisions are recorded in [RIPPLES_DEMO_PLAN.md](./RIPPL
 
 ## P0 acceptance
 
-See [P0_ACCEPTANCE.md](P0_ACCEPTANCE.md) for scope and fixes. Latest local checks: P0 33/33, P1 12/12, P2 15/15, and calculation tests 8/8. Local phone preview: http://127.0.0.1:5178/preview.html. Earlier temporary Netlify previews are separate snapshots and do not update with local changes.
+See [P0_ACCEPTANCE.md](P0_ACCEPTANCE.md) for scope and fixes. Latest local checks (2026-10-25): P0 33/33, P1 12/12, P2 15/15, calculation tests 8/8, and isolated SQL/privacy checks passed. The PWA manifest, icon, offline home page, and live drought endpoint were also checked locally. Local phone preview: http://127.0.0.1:5178/preview.html. Earlier temporary Netlify previews are separate snapshots and do not update with local changes.
 
 ## P1 progress
 

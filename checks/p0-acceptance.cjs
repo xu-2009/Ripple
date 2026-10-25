@@ -45,6 +45,8 @@ async function test(name, action, opts = {}) {
     await setup(p);
     for (const page of ['usage','map','ripple','profile','home']) { await nav(p,page); assert.equal(await p.locator('h1').count(),1); }
     assert.match(await p.locator('body').innerText(), /Add a bill to begin/);
+    assert.match(await p.locator('.hero-tank').getAttribute('style'), /--tank-level:50\.00%/);
+    assert.equal(await p.locator('.tank-readout').count(), 0);
   });
   await test('Optional 12-month sample loads only into an empty bill store and is labeled fictional', async p => {
     await setup(p); await nav(p,'usage');
@@ -70,7 +72,7 @@ async function test(name, action, opts = {}) {
     await p.locator('[name="irrigation"]').check(); await p.locator('[name="waterGoal"]').fill('6000');
     await p.locator('#profile-form [type="submit"]').click(); await p.reload();
     assert.equal((await saved(p)).profile.residents,4); assert.equal(await p.locator('[name="city"]').inputValue(),'Provo');
-    await nav(p,'home'); assert.match(await p.locator('body').innerText(), /50 gal/); assert.match(await p.locator('.tank-readout strong').textContent(),/100%/);
+    await nav(p,'home'); assert.match(await p.locator('body').innerText(), /50 gal/); assert.match(await p.locator('.hero-tank').getAttribute('style'), /--tank-level:100\.00%/);
     await nav(p,'profile'); await p.locator('[name="residents"]').fill('2'); await p.locator('#profile-form [type="submit"]').click();
     await nav(p,'home'); assert.match(await p.locator('body').innerText(), /100 gal/);
   });
@@ -122,9 +124,10 @@ async function test(name, action, opts = {}) {
     await p.locator('#entry-form').evaluate(form=>form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));
     assert.equal((await saved(p)).entries.length,0); assert.equal(await p.locator('[name="cost"]').inputValue(),'12'); assert.match(await p.locator('[role="status"]').innerText(),/Check the bill/);
   });
-  await test('Monthly goal comparison normalizes a 60-day bill and discloses calculation',async p=>{
+  await test('Monthly water goal normalizes a 60-day bill to the tank scale',async p=>{
     await setup(p,{profile:{...profile,waterGoal:'3044'},entries:[entry('2026-01',6000,60)]});
-    assert.match(await p.locator('.tank-readout strong').textContent(),/100%/); assert.match(await p.locator('.tank-readout').innerText(),/3,044 gal per 30.44-day month/);
+    assert.equal(await p.evaluate(()=>monthlyEquivalent(state.entries[0])), 3044);
+    assert.match(await p.locator('.hero-tank').getAttribute('style'), /--tank-level:100\.00%/);
   });
   await test('Different billing lengths, daily change and chronological sorting', async p => {
     await setup(p,{profile, entries:[entry('2026-03',3600,30),entry('2026-01',3000,30),entry('2026-02',3100,31)]});

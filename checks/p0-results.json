@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-22T19:07:15.395Z",
+  "date": "2026-10-25T22:23:29.959Z",
   "url": "http://127.0.0.1:5178/",
   "passed": 33,
   "total": 33,
@@ -49,7 +49,7 @@
       "status": "PASS"
     },
     {
-      "name": "Monthly goal comparison normalizes a 60-day bill and discloses calculation",
+      "name": "Monthly water goal normalizes a 60-day bill to the tank scale",
       "status": "PASS"
     },
     {

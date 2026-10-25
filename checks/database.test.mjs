@@ -2,7 +2,7 @@
 // This validates SQL and permissions, not Supabase's hosted Auth or Storage services.
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-const {PGlite}=await import(process.env.PGLITE_MODULE || '/private/tmp/ripples-sql-check/node_modules/@electric-sql/pglite/dist/index.js');
+const {PGlite}=await import(process.env.PGLITE_MODULE || '@electric-sql/pglite');
 const db=new PGlite();
 await db.exec(`create role anon; create role authenticated; create role service_role;
 create schema auth; create schema storage;
@@ -60,4 +60,16 @@ await asUser(ids[0],async()=>{
   assert.equal((await db.query('select * from community_bills')).rows.length,0);
 });
 console.log('PASS server-day check-in deduplication, undo, user data erasure');
+const showcaseSql=await readFile(new URL('../supabase/showcase-users.sql',import.meta.url),'utf8');
+await db.exec(showcaseSql);
+await db.exec(showcaseSql);
+assert.equal((await db.query('select count(*)::integer as n from public.showcase_users')).rows[0].n,1059);
+await db.exec('set role anon');
+try {
+  const report=await db.query('select * from public.showcase_county_report()');
+  assert.equal(report.rows.length,58);
+  assert.equal(report.rows.reduce((n,row)=>n+Number(row.participants),0),1059);
+  await assert.rejects(db.query('select * from public.showcase_users'),/permission denied/);
+} finally { await db.exec('reset role'); }
+console.log('PASS fictional showcase seed is idempotent, aggregated, and table-private');
 await db.close();

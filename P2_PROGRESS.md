@@ -53,3 +53,11 @@ A password-protected one-hour Netlify HTTPS preview has been published for partn
 
 
 2026-10-21 update: recorded a 76-second silent demo draft at `deliverables/ripples-demo-footage.mp4`. The student team must review it, add narration, and create the final 1–3 minute submission video. Temporary preview: https://celebrated-cajeta-13e56b.netlify.app (Netlify password shown in the deployment confirmation; expires about one hour after publishing).
+
+## 2026-10-25 release audit
+
+The source is in `https://github.com/xu-2009/Ripple` and Vercel is connected to `main`. `vercel.json` builds the static PWA from `dist/` and `/api/drought` is a separate function. The Vercel deployment completed, but an unauthenticated visitor was redirected to Vercel sign-in; public partner access needs the project's Deployment Protection setting changed by the owner. The older random-suffix deployment URL is an immutable snapshot.
+
+Local checks after the current UI: calculations 8/8, P0 browser 33/33, P1 browser 12/12, P2 browser 15/15, isolated SQL/privacy checks passed. The fictional showcase migration is idempotent and creates 1,059 rows, exposing only 58 county-resource aggregates. A local PWA check confirmed the manifest, icon, service worker and offline Home. The local official drought endpoint returned dated U.S. Drought Monitor data. Browser checks used the installed Chrome at 320, 393 and wider viewports; the 320px Home heading was adjusted for readability.
+
+Still requiring human review: a real public phone visit after Vercel protection is changed; two-account/two-device cloud verification before enabling account and shared-submission UI; a final narrated 1–3 minute video; confirmed team contributions, written answers, and final submission fields. The current code intentionally keeps multi-user features hidden.
