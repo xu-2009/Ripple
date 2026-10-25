@@ -1,3 +1,228 @@
+
+Loading older messages…
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 let STORAGE_KEY = "ripples-demo-v1";
 const EIA_UTAH_KWH_2024 = 774;
 const USGS_UTAH_DOMESTIC_GPCD_2015 = 169;
@@ -10,7 +235,7 @@ const NAV = [
   { id: "home", label: "Home", icon: "home" },
   { id: "usage", label: "My Usage", icon: "chart" },
   { id: "map", label: "Explore Utah", icon: "map" },
-  { id: "ripple", label: "Make a Ripple", icon: "drop" },
+  { id: "ripple", label: "Save", icon: "drop" },
   { id: "profile", label: "Profile", icon: "user" }
 ];
 const ACTION_CATALOG = [
@@ -237,10 +462,11 @@ function resourceSwitch() {
     '<button type="button" data-resource="water" aria-pressed="' + (state.resource === "water") + '" class="' + (state.resource === "water" ? "selected" : "") + '">Water</button>' +
     '<button type="button" data-resource="electricity" aria-pressed="' + (state.resource === "electricity") + '" class="' + (state.resource === "electricity" ? "selected" : "") + '">Electricity</button></div>';
 }
-function pageIntro(kicker, title, subtitle) {
-  return '<div class="intro"><div class="eyebrow">' + kicker + '</div><h1>' + title +
-    '</h1><p>' + subtitle + '</p></div>';
+function pageIntro(kicker, title, subtitle = "") {
+  return '<header class="intro"><h1>' + esc(title) + '</h1>' +
+    (subtitle ? '<p>' + esc(subtitle) + '</p>' : '') + '</header>';
 }
+
 function renderShell() {
   document.documentElement.classList.toggle('reduce-motion', state.reduceMotion);
   // Keep keyboard users on the control they activated after replacing the view.
@@ -263,12 +489,12 @@ function renderShell() {
         '">' + icon(item.icon) + '<span>' + item.label + '</span></button>'
       ).join("") + '</nav>' +
       '<div class="sidebar-foot">Small changes.<br>Bigger impact.<br><br>Ripples · 2026</div>' +
-    '</aside><main class="content">' +
-      '<div class="topline"><span>UTAH HOUSEHOLD CONSERVATION</span><span class="pill" id="storage-badge">' + esc(cloudUser ? cloudStatus : 'Local · saved in this browser') + '</span></div>' +
+    '</aside><main class="content page-' + state.page + '">' +
+      '<div class="topline"><span>UTAH · HOUSEHOLD USAGE</span><span class="pill" id="storage-badge">' + esc(cloudUser ? cloudStatus : 'Local · saved in this browser') + '</span></div>' +
       (notice ? '<div class="notice" role="status">' + esc(notice) + '</div>' : "") +
-      (hasFictionalSampleBills() ? '<div class="notice sample-data-notice" role="note"><strong>FICTIONAL SAMPLE BILLS</strong><br>2025 water and electricity examples are invented for demonstration. Replace or delete them before treating these trends as real household usage.</div>' : '') +
+      (hasFictionalSampleBills() ? '<div class="notice sample-data-notice" role="note"><strong>DEMO DATA</strong> · These bills are fictional. They are not actual household records.</div>' : '') +
       content +
-      '<p class="footer">Ripples is a student-built conservation app. Bills and household settings stay in this browser. Account sync and shared submissions are hidden until tested across multiple accounts. Estimates and public data disclose their sources and assumptions.</p>' +
+      '<p class="footer">Ripples is a student project. Usage records stay in this browser unless an account is connected. Estimates and example county data are not measured conservation results.</p>' +
     '</main></div>';
   if (focusKey) app.querySelector('[' + focusKey + '="' + CSS.escape(focusValue) + '"]')?.focus({ preventScroll: true });
   startWaterWaves();
@@ -293,45 +519,43 @@ function renderHome() {
   const { latest, previous } = latestAndPrevious();
   const waterBill = latestAndPrevious('water').latest;
   const waterGoal = Number(state.profile.waterGoal);
-  const waterScale = waterGoal > 0 ? waterGoal : USGS_UTAH_DOMESTIC_GPCD_2015 * Math.max(1, Number(state.profile.residents)) * AVERAGE_MONTH_DAYS;
+  const waterScale = waterGoal > 0
+    ? waterGoal
+    : USGS_UTAH_DOMESTIC_GPCD_2015 * Math.max(1, Number(state.profile.residents)) * AVERAGE_MONTH_DAYS;
   const waterMonthly = waterBill ? monthlyEquivalent(waterBill) : null;
-  const tankLevel = waterMonthly === null ? 50 : Math.max(0, Math.min(100, waterMonthly / waterScale * 100));
+  // With no water record, this is only an animation preview, not measured usage.
+  const tankLevel = waterMonthly === null ? 45 : Math.max(0, Math.min(100, waterMonthly / waterScale * 100));
   const kind = state.resource;
-  const isWater = kind === "water";
+  const isWater = kind === 'water';
   const change = dailyChange(latest, previous);
   const perPerson = latest ? latest.amount / (Math.max(1, Number(state.profile.residents)) * latest.days) : null;
   const motionReduced = reducedMotion();
   const tiltAvailable = !motionReduced && window.isSecureContext && typeof DeviceOrientationEvent !== 'undefined';
-  const motionHint = motionReduced ? 'Motion is reduced in your device settings.' :
-    !window.isSecureContext ? 'Phone tilt requires an HTTPS connection.' :
-    typeof DeviceOrientationEvent === 'undefined' ? 'Tilt sensors are unavailable here; move or touch the water to make it respond.' :
-    (tiltMessage || 'Move the pointer over the water, or enable tilt on a phone.');
+  const motionHint = motionReduced ? 'Motion effects are turned off.' :
+    !window.isSecureContext ? 'Phone tilt needs HTTPS.' :
+    typeof DeviceOrientationEvent === 'undefined' ? 'Move your pointer to animate the water.' :
+    (tiltMessage || 'Move your pointer, or enable phone tilt.');
+
   return '<section class="card hero hero-flow-demo">' +
       '<div class="hero-tank" aria-hidden="true" style="--tank-level:' + tankLevel.toFixed(2) + '%"><svg class="hero-tank-water' + (tankLevel === 0 ? ' is-empty' : '') + '" preserveAspectRatio="none"><defs><linearGradient id="tank-front-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3fc1d2"/><stop offset="0.5" stop-color="#078da7"/><stop offset="1" stop-color="#075c74"/></linearGradient><linearGradient id="tank-back-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ee9e9" stop-opacity=".72"/><stop offset="1" stop-color="#2ba6b7" stop-opacity=".25"/></linearGradient></defs><path class="tank-wave-back" fill="url(#tank-back-fill)"></path><path class="tank-wave-front" fill="url(#tank-front-fill)"></path><path class="tank-wave-crest" fill="none" stroke="rgba(213,255,255,.8)" stroke-width="2"></path></svg><div class="tank-ripple"></div></div>' +
-      '<div class="hero-copy"><div class="eyebrow">Your resources. Your impact.</div>' +
-      '<h1>Make every drop count.</h1>' +
-      '<p>Track what your household uses, understand the pattern, and find a practical next step.</p>' +
-      '<div class="button-row"><button class="button primary" data-nav="usage">Add a bill ↗</button>' +
-      '<button class="button secondary" data-nav="profile">Household profile</button></div>' +
-      '<div class="tag">' + (latest ? "Latest " + esc(monthLabel(latest.month)) + " " + (isWater ? "water" : "electricity") + " bill" : "Your first entry starts the story") + '</div>' +
+      '<div class="hero-copy"><h1>Track water and electricity.</h1>' +
+      '<p>See how much your household uses over time.</p>' +
+      '<div class="button-row"><button class="button primary" data-nav="usage">Add a bill</button>' +
+      '<button class="button secondary" data-nav="map">Explore Utah</button></div>' +
+      '<div class="tag">' + (waterBill
+        ? 'Water animation based on ' + esc(monthLabel(waterBill.month)) + ' usage, scaled to your goal or a historical Utah reference.'
+        : 'Animation preview — add a water bill for a personal reading.') + '</div>' +
       '<div class="tank-motion"><button type="button" class="tilt-toggle" data-tilt ' + (tiltAvailable ? '' : 'disabled') + '>' + (tiltEnabled ? 'Disable tilt' : 'Enable tilt') + '</button>' +
       '<p class="motion-hint" id="tilt-status" role="status">' + esc(motionHint) + '</p></div>' +
       '</div></section>' +
-    '<section style="margin-top:23px"><div class="card-head"><div><div class="eyebrow">01 / YOUR RIPPLE</div><h2>At a glance</h2></div>' + resourceSwitch() + '</div>' +
-    '<div class="grid three">' +
-      statCard("Latest " + (isWater ? "water" : "electricity") + " bill", latest ? number(latest.amount, isWater ? 0 : 1) + " " + unit() : "—", latest ? monthLabel(latest.month) + " · " + latest.days + " billing days" : "Add a bill to begin") +
-      statCard(isWater ? "Per person, per day" : "Per person, per day", perPerson === null ? "—" : number(perPerson, 1) + " " + unit(), "Based on " + Math.max(1, Number(state.profile.residents)) + " household " + (Number(state.profile.residents) === 1 ? "member" : "members")) +
-      statCard("Daily-use change", change === null ? "—" : (change > 0 ? "+" : "") + number(change, 1) + "%", change === null ? (previous && daily(previous) === 0 ? "Previous bill was zero; percentage change is undefined" : "Enter a second bill to see change") : "Versus previous bill · adjusted for billing days", change === null ? "" : change <= 0 ? "good" : "warm") +
-    '</div></section>' +
-    '<section class="grid two" style="margin-top:20px">' +
-      '<div class="card"><div class="card-head"><div><div class="eyebrow">YOUR HISTORY</div><h3>Usage over time</h3></div><button class="button ghost small" data-nav="usage">View all →</button></div>' + renderChart(resourceEntries(), kind) + '</div>' +
-      '<div class="card"><div class="eyebrow">YOU VS. UTAH</div><h3>Know the context</h3>' + renderComparison() + '</div>' +
-    '</section>' +
-    '<section class="card" style="margin-top:20px"><div class="eyebrow">NEXT SMALL STEP</div><h3>' +
-      (state.profile.lawn ? "Check the irrigation system" : "Look for hidden leaks") + '</h3><p class="muted">' +
-      (state.profile.lawn ? "A damaged sprinkler head can keep watering pavement. Inspect zones while they run and repair visible leaks." : "A running toilet or dripping faucet may be easy to miss. Check fixtures and compare your next bill after a repair.") +
-      '</p><button class="button secondary" data-nav="ripple">Explore actions →</button></section>';
+    '<section class="home-summary"><div class="card-head"><h2>At a glance</h2>' + resourceSwitch() + '</div>' +
+      '<div class="grid three">' +
+        statCard('Latest ' + (isWater ? 'water' : 'electricity') + ' bill', latest ? number(latest.amount, isWater ? 0 : 1) + ' ' + unit() : '—', latest ? monthLabel(latest.month) : 'No bills added yet') +
+        statCard('Per person, per day', perPerson === null ? '—' : number(perPerson, 1) + ' ' + unit(), 'Based on your household size') +
+        statCard('Change from last bill', change === null ? '—' : (change > 0 ? '+' : '') + number(change, 1) + '%', change === null ? 'Add two bills to compare' : 'Adjusted for billing days', change === null ? '' : change <= 0 ? 'good' : 'warm') +
+      '</div></section>';
 }
+
 function statCard(label, value, note, tone = "") {
   return '<div class="card"><div class="stat-label">' + esc(label) + '</div><div class="stat-value ' + tone + '">' +
     esc(value) + '</div><p class="stat-note">' + esc(note) + '</p></div>';
@@ -371,7 +595,7 @@ function renderChart(entries, type, annual = false) {
     [0, .5, 1].map(f => '<line x1="' + left + '" y1="' + y(max * f) + '" x2="' + (w - right) + '" y2="' + y(max * f) + '"/>').join("") +
     '<text x="0" y="' + (top + 4) + '">' + number(max, 0) + '</text><text x="0" y="' + (h - bottom + 4) + '">0</text>' +
     (state.chartStyle==='bar'?'':'<polyline points="' + pts + '"/>') + dots + labels + '</svg><p class="chart-tooltip fineprint" aria-live="polite">Select a point to inspect its value.</p>' +
-    '<p class="fineprint">Graph shows daily average ' + unit(type) + ' to account for different billing period lengths.' +
+    '<p class="fineprint">Daily averages adjust for different billing periods. ' + unit(type) + ' to account for different billing period lengths.' +
     (annual ? " Annual groups include recorded bills only; missing months are not estimated." : "") +
     (pointsData.length === 1 ? " Add another bill to see a trend." : "") + '</p>' +
     '<details class="chart-values"><summary>View chart values</summary><table><caption>Recorded daily averages</caption><thead><tr><th scope="col">Period</th><th scope="col">' + unit(type) + '/day</th></tr></thead><tbody>' +
@@ -419,121 +643,119 @@ function makeFictionalSampleBills() {
 }
 function renderUsage() {
   const type = state.resource;
+  // The simplified interface consistently uses a monthly line graph.
+  state.chartSpan = 'monthly';
+  state.chartStyle = 'line';
   const entry = state.entries.find(e => e.id === editingId);
   const entries = resourceEntries().slice().reverse();
-  const allowAnnual = entries.length >= 12;
-  return pageIntro("02 / MY USAGE", "Your usage, clearly.", "Add a bill from this month or a past month. Every entry remains editable and is saved in this browser.") +
-    (state.entries.length === 0 ? '<section class="card sample-data-card"><div class="eyebrow">OPTIONAL EXAMPLE DATA</div><h3>See a full year of trends</h3><p>Load 12 months of fictional water and electricity bills. This only appears when there are no saved bills and will not replace any data.</p><button class="button secondary" type="button" data-load-sample>Load fictional sample bills</button></section>' : '') +
-    '<div class="card-head"><div></div>' + resourceSwitch() + '</div>' +
-    '<div class="grid two"><section class="card"><div class="card-head"><div><h3>' + (entry ? "Edit bill" : "Add a monthly bill") + '</h3><p>Use the total shown on your utility statement.</p></div></div>' +
+  return pageIntro('', 'My Usage', 'Add your monthly bills to see your trends.') +
+    (state.entries.length === 0 ? '<section class="card sample-data-card"><h3>Try a sample household</h3><p>Load 12 months of fictional bills to explore the charts.</p><button class="button secondary" type="button" data-load-sample>Load demo bills</button></section>' : '') +
+    '<div class="card-head usage-top"><div></div>' + resourceSwitch() + '</div>' +
+    '<section class="card"><h2>' + (entry ? 'Edit bill' : 'Add a bill') + '</h2>' +
       '<form id="entry-form"><div class="form-grid">' +
-        field("Billing month", '<input name="month" type="month" required value="' + esc(entry?.month || new Date().toISOString().slice(0, 7)) + '">') +
-        field("Billing days", '<input name="days" type="number" min="1" max="366" step="1" required value="' + esc(entry?.days || 30) + '">') +
-        field("Amount", '<input name="quantity" type="number" min="0" max="100000000" step="any" required value="' + esc(entry?.quantity ?? "") + '" placeholder="' + (type === "water" ? "e.g. 4500" : "e.g. 750") + '">') +
-        field("Unit", type === "water" ?
-          '<select name="unit"><option value="gal" ' + selected(entry?.unit || "gal", "gal") + '>Gallons (gal)</option><option value="kgal" ' + selected(entry?.unit, "kgal") + '>Thousand gallons (kgal)</option><option value="ccf" ' + selected(entry?.unit, "ccf") + '>Hundred cubic feet (CCF)</option></select>' :
-          '<input name="unit" value="kWh" readonly aria-label="Kilowatt-hours">') +
-        field("Cost (optional)", '<input name="cost" type="number" min="0" max="1000000" step="0.01" value="' + esc(entry?.cost ?? "") + '" placeholder="$">') +
-      '</div><div class="form-actions"><button class="button primary" type="submit">' + (entry ? "Save changes" : "Save bill") + '</button>' +
-        (entry ? '<button class="button secondary" type="button" data-cancel-edit>Cancel</button>' : "") +
-      '</div></form><p class="fineprint" style="margin-top:18px">For water, CCF converts at 748.052 gal and kgal at 1,000 gal. The original number and unit are kept for editing.</p></section>' +
-      '<details class="card usage-history"' + (usageHistoryOpen ? ' open' : '') + '><summary>Bill history · ' + entries.length + ' ' + (entries.length === 1 ? "bill" : "bills") + '</summary>' +
-        (entries.length ? entries.map(e => '<div class="record"><div><strong>' + esc(monthLabel(e.month)) + ' · ' + number(e.quantity, 2) + ' ' + esc(e.unit) +
-        '</strong><span>' + e.days + ' days · ' + number(e.amount, 1) + ' ' + unit(e.type) + ' standardized</span></div>' +
+        field('Billing month', '<input name="month" type="month" required value="' + esc(entry?.month || new Date().toISOString().slice(0, 7)) + '">') +
+        field('Billing days', '<input name="days" type="number" min="1" max="366" step="1" required value="' + esc(entry?.days || 30) + '">') +
+        field('Usage amount', '<input name="quantity" type="number" min="0" max="100000000" step="any" required value="' + esc(entry?.quantity ?? '') + '" placeholder="' + (type === 'water' ? 'e.g. 4500' : 'e.g. 750') + '">') +
+        field('Unit', type === 'water'
+          ? '<select name="unit"><option value="gal" ' + selected(entry?.unit || 'gal', 'gal') + '>Gallons (gal)</option><option value="kgal" ' + selected(entry?.unit, 'kgal') + '>Thousand gallons (kgal)</option><option value="ccf" ' + selected(entry?.unit, 'ccf') + '>Hundred cubic feet (CCF)</option></select>'
+          : '<input name="unit" value="kWh" readonly aria-label="Kilowatt-hours">') +
+        field('Bill cost (optional)', '<input name="cost" type="number" min="0" max="1000000" step="0.01" value="' + esc(entry?.cost ?? '') + '" placeholder="$">') +
+      '</div><div class="form-actions"><button class="button primary" type="submit">' + (entry ? 'Save changes' : 'Save bill') + '</button>' +
+      (entry ? '<button class="button secondary" type="button" data-cancel-edit>Cancel</button>' : '') +
+      '</div></form></section>' +
+    '<section class="card usage-chart"><h2>Usage over time</h2>' + renderChart(resourceEntries(), type) + '</section>' +
+    '<details class="card usage-history"' + (usageHistoryOpen ? ' open' : '') + '><summary>Bill history (' + entries.length + ')</summary>' +
+      (entries.length ? entries.map(e => '<div class="record"><div><strong>' + esc(monthLabel(e.month)) + ' · ' + number(e.quantity, 2) + ' ' + esc(e.unit) +
+        '</strong><span>' + e.days + ' billing days</span></div>' +
         '<div class="record-actions"><button class="button small secondary" data-edit="' + esc(e.id) + '">Edit</button>' +
-        '<button class="button small danger" data-delete="' + esc(e.id) + '">Delete</button></div></div>').join("") :
-        '<div class="empty">No bills yet. Your first one can be from any month.</div>') +
-      '</details></div>' +
-    '<section class="card" style="margin-top:20px"><div class="card-head"><div><div class="eyebrow">HISTORY</div><h3>Daily average trend</h3></div>' +
-      (allowAnnual ? '<div class="switch" role="group" aria-label="Chart period"><button data-span="monthly" aria-pressed="' + (state.chartSpan === "monthly") + '" class="' + (state.chartSpan === "monthly" ? "selected" : "") + '">Monthly</button><button data-span="annual" aria-pressed="' + (state.chartSpan === "annual") + '" class="' + (state.chartSpan === "annual" ? "selected" : "") + '">Annual</button></div>' : "") +
-      '</div><div class="switch chart-style" role="group" aria-label="Chart style"><button data-chart-style="line" class="'+(state.chartStyle==='line'?'selected':'')+'" aria-pressed="'+(state.chartStyle==='line')+'">Line</button><button data-chart-style="bar" class="'+(state.chartStyle==='bar'?'selected':'')+'" aria-pressed="'+(state.chartStyle==='bar')+'">Bar</button></div>' + renderChart(resourceEntries(), type, allowAnnual && state.chartSpan === "annual") + '</section><details class="card feature-section usage-import"' + (importDraft ? ' open' : '') + '><summary>Import / export bills</summary>' + renderImport().replace(/^<section class="card feature-section">|<\/section>$/g, '') + '</details>';
+        '<button class="button small danger" data-delete="' + esc(e.id) + '">Delete</button></div></div>').join('') :
+        '<div class="empty">No bills yet.</div>') +
+    '</details>' +
+    '<details class="card usage-import"' + (importDraft ? ' open' : '') + '><summary>Import or export bills</summary>' +
+      renderImport().replace(/^<section class="card feature-section">|<\/section>$/g, '') + '</details>' +
+    '<details class="card usage-reference"><summary>Compare with Utah</summary>' +
+      '<div class="usage-reference-body">' + renderComparison() + '</div></details>';
 }
+
 function selected(value, expected) { return value === expected ? "selected" : ""; }
 function field(label, control, hint = "") {
   return '<label class="field"><span>' + label + '</span>' + control + (hint ? '<small>' + hint + '</small>' : "") + '</label>';
 }
 function renderProfile() {
   const p = state.profile;
-  return pageIntro("05 / PROFILE", "Know your household.", "Your profile supports fairer personal calculations and relevant suggestions. You can change it any time.") +
-    '<div class="grid two"><section class="card"><h3>Household details</h3><p class="muted">' + (cloudUser ? 'Private account workspace.' : 'Saved in this browser.') + '</p>' +
+  return pageIntro('', 'Household Settings', 'Update your household details and usage goals.') +
+    '<section class="card"><h2>Household</h2>' +
       '<form id="profile-form"><div class="form-grid">' +
-        field("People in household", '<input name="residents" type="number" min="1" max="30" step="1" required value="' + esc(p.residents) + '">') +
-        field("Home type", '<select name="home"><option value="apartment" ' + selected(p.home, "apartment") + '>Apartment</option><option value="house" ' + selected(p.home, "house") + '>House</option><option value="townhome" ' + selected(p.home, "townhome") + '>Townhome</option></select>') +
-        field("Utah city or ZIP", '<input name="city" maxlength="80" value="' + esc(p.city) + '" placeholder="e.g. Provo">') +
-        field("Monthly water goal (gal)", '<input name="waterGoal" type="number" min="0.01" max="100000000000" step="any" value="' + esc(p.waterGoal) + '" placeholder="Optional">') +
-        field("Monthly electricity goal (kWh)", '<input name="electricGoal" type="number" min="0.01" max="100000000000" step="any" value="' + esc(p.electricGoal) + '" placeholder="Optional">') +
-      '</div><div style="display:grid;gap:10px;margin-top:18px">' +
-        '<label class="check"><input name="lawn" type="checkbox" ' + (p.lawn ? "checked" : "") + '> This household maintains a lawn or garden</label>' +
-        '<label class="check"><input name="irrigation" type="checkbox" ' + (p.irrigation ? "checked" : "") + '> Outdoor irrigation is included in my water bill</label>' +
-      '</div><div class="form-actions"><button class="button primary" type="submit">Save profile</button></div></form></section>' +
-      '<section class="card"><div class="eyebrow">HOW WE COMPARE</div><h3>Context matters.</h3>' +
-        '<p class="muted">Gallons per person per day divides your bill by residents and billing days. It does not automatically adjust for lawn size, climate, or irrigation on a separate meter.</p>' +
-        '<p class="muted">The Utah electricity reference is per residential account, not per person. Account sync and shared reports remain hidden until verified across multiple accounts.</p>' +
-        '<div class="empty">Current location: ' + (p.city ? esc(p.city) : "Not added yet") + '</div>' +
-      '</section></div>' + renderAccount();
+        field('People in household', '<input name="residents" type="number" min="1" max="30" step="1" required value="' + esc(p.residents) + '">') +
+        field('Home type', '<select name="home"><option value="apartment" ' + selected(p.home, 'apartment') + '>Apartment</option><option value="house" ' + selected(p.home, 'house') + '>House</option><option value="townhome" ' + selected(p.home, 'townhome') + '>Townhome</option></select>') +
+        field('Utah city or ZIP', '<input name="city" maxlength="80" value="' + esc(p.city) + '" placeholder="e.g. Provo">') +
+        field('Monthly water goal (gal)', '<input name="waterGoal" type="number" min="0.01" max="100000000000" step="any" value="' + esc(p.waterGoal) + '" placeholder="Optional">') +
+        field('Monthly electricity goal (kWh)', '<input name="electricGoal" type="number" min="0.01" max="100000000000" step="any" value="' + esc(p.electricGoal) + '" placeholder="Optional">') +
+      '</div><div class="profile-options">' +
+        '<label class="check"><input name="lawn" type="checkbox" ' + (p.lawn ? 'checked' : '') + '> We have a lawn or garden</label>' +
+        '<label class="check"><input name="irrigation" type="checkbox" ' + (p.irrigation ? 'checked' : '') + '> Irrigation is included in our water bill</label>' +
+      '</div><div class="form-actions"><button class="button primary" type="submit">Save settings</button></div></form></section>' +
+    '<details class="card profile-data"><summary>Data & preferences</summary>' +
+      '<p class="muted">Bills are stored in this browser. Export a backup before clearing your data.</p>' +
+      '<div class="button-row"><button class="button secondary" type="button" data-extra="backup">Download backup</button>' +
+      '<button class="button danger" type="button" data-extra="clear-local">Clear saved data</button></div>' +
+      '<label class="field file-field"><span>Restore a Ripples backup</span><input type="file" accept=".json,application/json" data-import-backup></label>' +
+      '<label class="check"><input type="checkbox" data-reduce-motion ' + (state.reduceMotion ? 'checked' : '') + '> Reduce animations</label>' +
+    '</details>';
 }
+
 function renderMap() {
   const counties = countyMap?.counties || [];
-  const selected = counties.find(county => county.name === state.region) || counties.find(county => county.name === "Salt Lake");
-  const name = selected?.name || "Salt Lake";
-  const isWater = state.resource === "water";
-  const isDemo = state.mapLayer === "demo";
+  const selected = counties.find(county => county.name === state.region) || counties.find(county => county.name === 'Salt Lake');
+  const name = selected?.name || 'Salt Lake';
+  const isWater = state.resource === 'water';
   const demo = selected ? demoCountyStats(selected, state.resource) : null;
-  return pageIntro("03 / EXPLORE UTAH", "Explore Utah county by county.", "Select a county on the map or from the list. County boundaries are real; community figures in the example layer are fictional, never live submissions.") +
-    '<div class="card-head map-head"><div><div class="eyebrow">OFFICIAL BOUNDARY GEOMETRY</div><h2>29 Utah counties</h2></div>' + resourceSwitch() + '</div>' +
-    '<div class="map-layer-switch" role="group" aria-label="Map data layer">' +
-      '<button type="button" data-map-layer="demo" aria-pressed="' + isDemo + '" class="' + (isDemo ? 'selected' : '') + '">Example community</button>' +
-      '<button type="button" data-map-layer="official" aria-pressed="' + !isDemo + '" class="' + (!isDemo ? 'selected' : '') + '">Official sources</button></div>' +
-    '<p class="map-banner ' + (isDemo ? 'demo' : 'official') + '"><strong>' + (isDemo ? 'FICTIONAL EXAMPLE DATA' : 'OFFICIAL SOURCES · NO COUNTY USAGE DATA') + '</strong><br>' +
-      (isDemo ? 'Community counts, progress, and map colors are illustrative. No households have submitted data.' : 'The county outlines are official. Comparable county household utility figures are not included.') + '</p>' +
+  // This map uses fictional community participation records, never actual water/electricity usage.
+  return pageIntro('', 'Explore Utah', 'Explore a sample community conservation map.') +
+    '<div class="card-head map-head"><h2>Utah counties</h2>' + resourceSwitch() + '</div>' +
+    '<p class="map-banner demo"><strong>DEMO DATA</strong> · County colors and rankings show fictional conservation-action progress, not measured water or electricity usage.</p>' +
     '<section class="card map-panel"><div class="map-art">' +
       (counties.length ? '<svg class="utah-map" viewBox="0 0 380 510" role="img" aria-label="Interactive map of Utah counties">' +
         counties.map(county => {
-          const figure = isDemo ? demoCountyStats(county, state.resource) : null;
+          const figure = demoCountyStats(county, state.resource);
           return '<path class="county ' + (county.name === name ? 'active' : '') + '" d="' + county.path +
-            '" style="--county-fill:' + (figure ? demoCountyColor(figure.percent, isWater) : '#cce9eb') + '" data-region="' + esc(county.name) +
-            '" role="button" tabindex="0" aria-label="Select ' + esc(county.name) + ' County' + (figure ? ', example action completion ' + figure.percent + ' percent' : '') +
-            '"><title>' + esc(county.name) + ' County' + (figure ? ' · example progress ' + figure.percent + '%' : '') + '</title></path>';
+            '" style="--county-fill:' + demoCountyColor(figure.percent, isWater) + '" data-region="' + esc(county.name) +
+            '" role="button" tabindex="0" aria-label="Select ' + esc(county.name) + ' County, fictional conservation action completion ' + figure.percent + ' percent"><title>' + esc(county.name) + ' County · example progress ' + figure.percent + '%</title></path>';
         }).join('') + '</svg>' :
-        '<div class="empty">' + (countyLoadError ? esc(countyLoadError) : 'Loading Utah county boundaries…') + '</div>') +
-      (isDemo ? '<div class="map-key"><span class="map-key-gradient ' + (isWater ? 'water' : 'electricity') + '"></span> Lower → higher example action completion <span class="map-key-note">Not utility usage</span></div>' :
-        '<div class="map-key"><span class="map-key-swatch"></span> Selected county <span class="map-key-note">No usage shading</span></div>') +
-      '<p class="source">County geometry: <a href="https://gis.utah.gov/products/sgid/boundaries/county/" target="_blank" rel="noopener noreferrer">State of Utah SGID, updated July 2026 ↗</a>. Simplified for this interactive map.</p></div></section>' +
-      '<section class="card map-details"><label class="field"><span>Choose county</span><select data-county-select ' + (counties.length ? '' : 'disabled') + '>' +
-        counties.map(county => '<option value="' + esc(county.name) + '" ' + selectedOption(county.name, name) + '>' + esc(county.name) + ' County</option>').join('') +
-      '</select></label><div class="eyebrow" style="margin-top:24px">SELECTED COUNTY</div><h2>' + esc(name) + ' County</h2>' +
-      (isDemo && demo ? '<div class="demo-stat-grid"><div><strong>' + demo.participants + '</strong><span>Example participants</span></div>' +
-        '<div><strong>' + demo.completed + ' / ' + demo.started + '</strong><span>Example actions checked off</span></div></div>' +
-        '<p class="demo-progress-label">Illustrative goal progress · ' + demo.percent + '%</p>' +
-        '<progress class="demo-progress" value="' + demo.completed + '" max="' + demo.started + '">' + demo.percent + '%</progress>' +
-        '<p class="fineprint">Simulated check-ins for a design preview. These are not verified savings, gallons, kWh, or a representative county survey.</p>' :
-        '<p class="muted">' + (isWater ? 'Water usage' : 'Electricity usage') + ' data for this county: <strong>not available here</strong>.</p>') +
-      '<div class="eyebrow official-context-label">OFFICIAL STATEWIDE CONTEXT</div>' +
-      (isWater ? '<p class="muted"><a href="' + USGS_DOMESTIC_SOURCE + '" target="_blank" rel="noopener noreferrer">USGS 2015 Utah domestic reference ↗</a>: 169 gal/person/day for public-supplied homes statewide, including indoor and outdoor uses. It is historical, not a ' + esc(name) + ' County household figure. Current Utah GPCD reports can include nonresidential customers and are not substituted for this reference. <a href="' + WATER_SOURCE + '" target="_blank" rel="noopener noreferrer">Utah reporting methods ↗</a></p>' :
-        '<p class="muted">The <a href="' + EIA_SOURCE + '" target="_blank" rel="noopener noreferrer">2024 EIA Utah statewide reference ↗</a> is 774 kWh per residential account per month. It does not describe ' + esc(name) + ' County specifically.</p>') +
-      (isDemo ? '<p class="fineprint">Example figures come from fictional participant records stored separately from real accounts. They never use your bills or other visitors’ data.</p>' :
-        '<div class="empty">Verified community participants: no data yet<br>Measured county conservation: no data yet</div>') +
-      '<p class="fineprint">No county household usage comparison is shown. Any future real community reports need consent, a stated metric, normalization, and a minimum participant count before display.</p>' +
-    '</section>' + renderRegionalLeaderboard(counties, name, isDemo) + '<details class="card feature-section map-environment"' + (environmentPanelOpen ? ' open' : '') + '><summary>Environmental context</summary>' + renderEnvironment().replace(/^<section class="card feature-section"[^>]*>|<\/section>$/g, '') + '</details>';
+        '<div class="empty">' + (countyLoadError ? esc(countyLoadError) : 'Loading Utah counties…') + '</div>') +
+      '<div class="map-key"><span class="map-key-gradient ' + (isWater ? 'water' : 'electricity') + '"></span> Lower → higher example action completion</div></div></section>' +
+    '<section class="card map-details"><label class="field"><span>County</span><select data-county-select ' + (counties.length ? '' : 'disabled') + '>' +
+      counties.map(county => '<option value="' + esc(county.name) + '" ' + selectedOption(county.name, name) + '>' + esc(county.name) + ' County</option>').join('') +
+      '</select></label><h2>' + esc(name) + ' County</h2>' +
+      (demo ? '<div class="demo-stat-grid"><div><strong>' + demo.participants + '</strong><span>Example participants</span></div>' +
+        '<div><strong>' + demo.percent + '%</strong><span>Example action completion</span></div></div>' : '') +
+      '<p class="fineprint">Fictional participation data. No household bills contribute to these results.</p></section>' +
+    renderRegionalLeaderboard(counties, name, true) +
+    '<details class="card map-sources"><summary>Map sources & limitations</summary>' +
+      '<p class="source">County boundaries: <a href="https://gis.utah.gov/products/sgid/boundaries/county/" target="_blank" rel="noopener noreferrer">Utah SGID</a>. ' +
+      'The sample percentages are invented for demonstration. They are not utility consumption, verified savings, or representative Utah statistics.</p>' +
+      '<p class="source">Statewide references: <a href="' + USGS_DOMESTIC_SOURCE + '" target="_blank" rel="noopener noreferrer">USGS water</a> · ' +
+      '<a href="' + EIA_SOURCE + '" target="_blank" rel="noopener noreferrer">EIA electricity</a>. These references do not provide county-by-county household usage here.</p></details>';
 }
+
 function renderRegionalLeaderboard(counties, selectedName, isDemo) {
-  if (!isDemo) return '<section class="card leaderboard-section"><div class="eyebrow">REGIONAL LEADERBOARD</div><h2>Verified ranking unavailable.</h2>' +
-    '<p class="muted">No real county participant or conservation dataset is connected. Switch to Example community to preview how a ranking would work.</p></section>';
   if (!counties.length) return '';
   const ranked = counties.map(county => ({ name: county.name, ...demoCountyStats(county, state.resource) }))
     .sort((a, b) => b.percent - a.percent || b.completed - a.completed || a.name.localeCompare(b.name));
   const selectedRank = ranked.findIndex(county => county.name === selectedName) + 1;
   const rows = (list, offset = 0) => list.map((county, index) =>
-    '<li><button type="button" data-leaderboard-region="' + esc(county.name) + '" ' + (county.name === selectedName ? 'aria-current="true"' : '') + '>' +
-    '<span class="leaderboard-rank">' + (index + offset + 1) + '</span><span class="leaderboard-name"><strong>' + esc(county.name) + ' County</strong><small>' + county.participants + ' example participants · ' + county.completed + '/' + county.started + ' actions</small></span>' +
+    '<li><button type="button" data-leaderboard-region="' + esc(county.name) + '" ' +
+    (county.name === selectedName ? 'aria-current="true"' : '') + '>' +
+    '<span class="leaderboard-rank">' + (index + offset + 1) + '</span><span class="leaderboard-name"><strong>' +
+    esc(county.name) + ' County</strong><small>' + county.participants + ' fictional participants</small></span>' +
     '<span class="leaderboard-percent">' + county.percent + '%</span></button></li>').join('');
-  return '<section class="card leaderboard-section"><div class="eyebrow">FICTIONAL REGIONAL LEADERBOARD</div><h2>Example action progress by county.</h2>' +
-    '<p class="muted">Ranked by the share of simulated actions checked off. These are fixed example records, not verified savings or live Utah households.</p>' +
-    '<p class="leaderboard-current">' + esc(selectedName) + ' County is <strong>#' + selectedRank + ' of 29</strong> in this ' + (state.resource === 'water' ? 'water' : 'electricity') + ' example.</p>' +
-    '<ol class="leaderboard-list" aria-label="Top five fictional county action progress ranking">' + rows(ranked.slice(0, 5)) + '</ol>' +
-    '<details class="full-leaderboard"><summary>View all 29 example counties</summary><ol class="leaderboard-list" aria-label="All fictional county action progress rankings">' + rows(ranked.slice(5), 5) + '</ol></details>' +
-    '<p class="fineprint">Color and ranking use the same fictional completion share. Percentages are rounded; ties use completed action count, then county name. No local household bill or challenge check-in affects this list.</p></section>';
+  return '<section class="card leaderboard-section"><h2>Example county ranking</h2>' +
+    '<p class="muted">Fictional action-completion percentages, not actual conservation savings.</p>' +
+    '<p class="leaderboard-current">' + esc(selectedName) + ' County: <strong>#' + selectedRank + ' of 29</strong> in this demo</p>' +
+    '<ol class="leaderboard-list" aria-label="Top five fictional county action rankings">' + rows(ranked.slice(0, 5)) + '</ol>' +
+    '<details class="full-leaderboard"><summary>See all 29 counties</summary><ol class="leaderboard-list" aria-label="All fictional county rankings">' + rows(ranked.slice(5), 5) + '</ol></details></section>';
 }
+
 // Deterministic mock figures are fictional UI fixtures, not county measurements.
 // Keep them separate from official county geometry and browser-local household records.
 function demoCountyStats(county, resource) {
@@ -596,38 +818,43 @@ async function loadCountyMap() {
   }
 }
 function renderRipple() {
+  const isWater = state.resource === 'water';
   const p = state.profile;
-  const ideaIds = state.resource === 'water'
-    ? ['shorter-showers', 'hidden-leaks', p.lawn ? 'outdoor-watering' : 'efficient-fixtures']
-    : ['idle-power', 'full-laundry', 'hidden-leaks'];
-  const completed = state.actionGoals.filter(goal => goal.done).length;
-  return pageIntro("04 / MAKE A RIPPLE", "Try one small change.", "Explore practical actions and model an estimated saving. Simulator numbers are projections, not measured results.") +
-    '<section class="card ripple-simulator"><div class="eyebrow">ONE SIMULATOR · ESTIMATE</div><h2>Shorter showers</h2><p class="muted">Assumes one shower per person each day. Change the inputs to match your household.</p>' +
-      slider("Current shower length", "current", 1, 30, simulation.current, "min") +
-      slider("Target shower length", "target", 1, 30, simulation.target, "min") +
-      slider("People taking a daily shower", "household", 1, 30, simulation.household ?? p.residents, "people") +
-      slider("Showerhead flow rate", "flow", .5, 5, simulation.flow, "gal/min", .1) +
-      '<div class="grid three" style="margin-top:24px">' +
-        '<div><div class="stat-label">Daily</div><div class="stat-value" id="sim-daily">—</div><small>gal estimate</small></div>' +
-        '<div><div class="stat-label">Monthly</div><div class="stat-value" id="sim-monthly">—</div><small>gal / 30 days</small></div>' +
-        '<div><div class="stat-label">Yearly</div><div class="stat-value" id="sim-yearly">—</div><small>gal / 365 days</small></div>' +
-      '</div><p class="fineprint" id="sim-explanation"></p></section>' +
-    '<section class="card ripple-tips"><div class="eyebrow">THREE PRACTICAL TIPS</div><h2>Start where you are.</h2>' +
-      '<div class="grid three">' + ideaIds.map(id => renderRippleTip(ACTION_CATALOG.find(action => action.id === id))).join('') + '</div>' +
-      '<button class="button secondary" data-nav="profile">Update household details →</button></section>' +
-    '<section class="card action-progress ripple-goals"><div class="eyebrow">ONE GOAL TRACKER</div><h2>Your goals.</h2>' +
-      '<p class="muted">' + completed + ' of ' + state.actionGoals.length + ' saved actions marked done. These are self-reported actions, not measured water or energy savings.</p>' +
-      '<progress value="' + completed + '" max="' + Math.max(1, state.actionGoals.length) + '">' + completed + ' complete</progress>' +
-      (state.actionGoals.length ? '<div class="goal-list">' + state.actionGoals.map(goal => {
-        const action = ACTION_CATALOG.find(item => item.id === goal.id);
-        return '<div class="goal-row"><strong>' + esc(action.title) + '</strong><span>' + (goal.done ? 'Done' : 'In progress') + '</span>' +
-          '<button class="button small secondary" data-action-toggle="' + goal.id + '">' + (goal.done ? 'Mark ongoing' : 'Mark done') + '</button>' +
-          '<button class="button small ghost" data-action-remove="' + goal.id + '">Remove</button></div>';
-      }).join('') + '</div>' : '<p class="fineprint">Choose a tip above to add a self-reported action goal.</p>') +
-      '<details class="measured-goal-details"><summary>Set a bill-based reduction target</summary>' +
-      renderMeasuredGoals().replace('<section class="card feature-section">', '<div class="measured-goal-panel">').replace('</section>', '</div>') +
-      '</details></section>';
+  const tipIds = isWater
+    ? ['hidden-leaks', p.lawn ? 'outdoor-watering' : 'efficient-fixtures', 'full-laundry']
+    : ['idle-power'];
+  const tips = tipIds.map(id => ACTION_CATALOG.find(a => a.id === id))
+    .filter(Boolean)
+    .map(action => '<article class="ripple-simple-tip"><h3>' + esc(action.title) + '</h3><p>' + esc(action.action) + '</p></article>')
+    .join('');
+  const otherTips = isWater ? '' :
+    '<article class="ripple-simple-tip"><h3>Use efficient lighting</h3><p>Switch high-use bulbs to LEDs when replacements are needed.</p></article>' +
+    '<article class="ripple-simple-tip"><h3>Adjust your thermostat</h3><p>Use an energy-saving setting when you are away.</p></article>';
+
+  const calculator = isWater
+    ? '<section class="card ripple-simulator"><h2>Shower savings</h2>' +
+        '<p class="muted">See how fewer minutes could reduce water use.</p>' +
+        slider('Current shower length', 'current', 1, 30, simulation.current, 'min') +
+        slider('New shower length', 'target', 1, 30, simulation.target, 'min') +
+        slider('People showering each day', 'household', 1, 30, simulation.household ?? p.residents, 'people') +
+        slider('Showerhead flow', 'flow', .5, 5, simulation.flow, 'gal/min', .1) +
+        '<div class="grid two ripple-output">' +
+          '<div><div class="stat-label">Estimated monthly savings</div><div class="stat-value" id="sim-monthly">—</div><small>gal / 30 days</small></div>' +
+          '<div><div class="stat-label">Estimated yearly savings</div><div class="stat-value" id="sim-yearly">—</div><small>gal / 365 days</small></div>' +
+        '</div><p class="fineprint" id="sim-explanation"></p></section>'
+    : '<section class="card ripple-simulator"><h2>Standby electricity</h2>' +
+        '<p class="muted">Estimate the electricity used by devices left on standby.</p>' +
+        renderActionEstimate('idle-power') + '</section>';
+
+  return pageIntro('', 'Save Resources', '') +
+    '<div class="card-head"><div></div>' + resourceSwitch() + '</div>' +
+    calculator +
+    '<section class="card ripple-tips"><h2>Ways to save</h2><div class="grid three">' + tips + otherTips + '</div></section>' +
+    '<details class="card ripple-goal-details"><summary>Set a monthly usage goal</summary>' +
+      renderMeasuredGoals().replace(/^<section class="card feature-section">|<\/section>$/g, '') +
+    '</details>';
 }
+
 function renderRippleTip(action) {
   const goal = state.actionGoals.find(item => item.id === action.id);
   return '<article class="tip ripple-tip"><h3>' + esc(action.title) + '</h3><p>' + esc(action.action) + '</p><p class="tip-context"><strong>For your household:</strong> ' + esc(actionContext(action.id)) + '</p>' +
@@ -1137,3 +1364,6 @@ if (state.page === "ripple") updateSimulation();
 loadCountyMap();
 loadShowcaseCountyStats();
 installFeatures();
+
+
+⋮⋮⋮⋮
