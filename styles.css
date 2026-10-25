@@ -1,3 +1,228 @@
+
+Loading older messages…
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 :root {
   --ocean: #083d56;
   --teal: #087f8c;
@@ -286,3 +511,48 @@ small, .muted { color: var(--muted); }
 .measured-goal-details[open] > summary { margin-bottom: .85rem; }
 
 @media (max-width: 360px) { .card-head { flex-wrap: wrap; } }
+
+/* Final CAC UI cleanup — scoped additions only. */
+.home-summary { margin-top: 24px; }
+.home-summary .card-head { align-items: center; }
+.home-summary .card-head h2 { margin: 0; }
+.page-home .hero-copy { gap: 6px; }
+.page-home .hero-copy .tag { font-size: 12px; max-width: 520px; color: #d5f8fa; }
+.page-usage .usage-top { margin: 12px 0 16px; }
+.page-usage .usage-chart { margin-top: 18px; }
+.page-usage .usage-reference { margin-top: 16px; }
+.page-usage .usage-reference-body { margin-top: 16px; }
+.page-map .map-head h2 { margin: 0; }
+.page-map .map-sources { margin-top: 16px; }
+.page-map .map-details h2 { margin-top: 18px; }
+.page-ripple .ripple-simulator { margin-top: 0; }
+.page-ripple .ripple-output { margin-top: 20px; }
+.page-ripple .ripple-tips { margin-top: 18px; }
+.page-ripple .ripple-simple-tip { background: #f1f9f9; border: 1px solid #d5e9e9; border-radius: 14px; padding: 16px; }
+.page-ripple .ripple-simple-tip p { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
+.page-ripple .ripple-goal-details { margin-top: 18px; }
+.page-ripple .ripple-goal-details .feature-section { box-shadow: none; border: 0; background: transparent; padding: 0; margin: 16px 0 0; }
+.page-profile .profile-options { display: grid; gap: 12px; margin-top: 18px; }
+.page-profile .profile-data { margin-top: 18px; }
+.page-profile .profile-data .button-row { margin: 16px 0; }
+.page-profile .profile-data .check { margin: 18px 0 0; }
+.page-profile .profile-data .file-field { margin-bottom: 12px; }
+.page-usage .usage-history, .page-usage .usage-import, .page-usage .usage-reference,
+.page-map .map-sources, .page-profile .profile-data, .page-ripple .ripple-goal-details { padding-top: 14px; padding-bottom: 14px; }
+.page-usage .usage-history > summary, .page-usage .usage-import > summary,
+.page-usage .usage-reference > summary, .page-map .map-sources > summary,
+.page-profile .profile-data > summary, .page-ripple .ripple-goal-details > summary {
+  min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--ocean); font-weight: 700;
+}
+.page-usage .usage-history[open] > summary, .page-usage .usage-import[open] > summary,
+.page-usage .usage-reference[open] > summary, .page-map .map-sources[open] > summary,
+.page-profile .profile-data[open] > summary, .page-ripple .ripple-goal-details[open] > summary { margin-bottom: 14px; }
+@media(max-width:560px) {
+  .page-ripple .ripple-output { grid-template-columns: 1fr 1fr; gap: 9px; }
+  .page-ripple .ripple-output .stat-value { font-size: 23px; }
+  .page-home .hero-flow-demo { min-height: 390px; }
+  .page-home .hero-flow-demo .hero-copy { padding-bottom: 24px; }
+}
+
+
+⋮⋮⋮⋮
