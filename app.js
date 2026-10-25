@@ -1139,6 +1139,3 @@ if (state.page === "ripple") updateSimulation();
 loadCountyMap();
 loadShowcaseCountyStats();
 installFeatures();
-
-
-⋮⋮⋮⋮
