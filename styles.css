@@ -492,148 +492,258 @@ small, .muted { color: var(--muted); }
 .reduce-motion .content > * { animation:none !important; }
 
 /* ================================================================
-   FINAL UI: shared rhythm, readable cards, open Utah map, liquid tank
+   RIPPLES FINAL PRESENTATION
+   Consistent spacing, full-tank Home, stable county selection,
+   separate impact cards and centered household settings.
    ================================================================ */
-:root { --section-space: 20px; }
-.content { max-width: 1420px; }
-.page-home > .home-stat-row,
-.page-usage > .utility-details-row,
-.page-map > .map-hero,
-.page-ripple > .impact-destinations,
-.page-profile > .profile-data { margin-top: var(--section-space); }
-.intro { margin-bottom: 22px; }
-.intro h1 { font-size: clamp(32px, 3.5vw, 46px); margin: 0 0 7px; }
-.intro p { font-size: 14px; max-width: 620px; margin: 0; }
-.card h2 { margin-top: 0; }
-.content details > summary { cursor: pointer; }
+:root { --page-space: 22px; }
+.content { max-width: 1440px; }
 .content .card { min-width: 0; }
+.intro { margin-bottom: var(--page-space); }
+.intro h1 { font-size: clamp(32px, 3.7vw, 46px); margin-bottom: 8px; }
+.intro p { font-size: 14px; margin: 0; }
+.content details > summary { cursor: pointer; }
+.page-home .home-stat-row,
+.page-usage .utility-details-row,
+.page-ripple .ripple-simulator,
+.page-ripple .impact-bottom-grid,
+.page-profile .profile-data { margin-top: var(--page-space); }
 
-/* One visible vessel, one physically modelled liquid surface. */
-.home-hero {
-  display: grid;
-  grid-template-columns: minmax(0,1.05fr) minmax(0,.95fr);
-  align-items: center;
-  gap: clamp(10px, 2.7vw, 32px);
-  min-height: 410px;
-  padding: clamp(19px, 3vw, 32px);
+/* Home: one full-width water tank, readable text floating over the liquid. */
+.page-home .full-tank-hero {
+  position: relative;
+  display: block;
+  isolation: isolate;
+  min-height: clamp(450px, 43vw, 620px);
+  padding: 0;
+  overflow: hidden;
+  border-radius: 25px;
+  border: 1px solid rgba(144, 237, 244, .3);
+  background: linear-gradient(125deg, #06374c, #086579);
+}
+.page-home .full-tank-hero::before { content: none; }
+.page-home .full-tank-hero .hero-tank-shell,
+.page-home .full-tank-hero .hero-tank {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  aspect-ratio: auto;
+  transform: none;
+  filter: none;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.page-home .full-tank-hero .hero-tank-water {
+  width: 100%;
+  height: 100%;
+  display: block;
+  position: absolute;
+  inset: 0;
+  filter: none;
   overflow: hidden;
 }
-.home-hero .hero-copy {
-  min-height: auto;
-  max-width: unset;
-  padding: clamp(12px, 2vw, 26px);
-  position: relative;
-  z-index: 1;
-  order: 2;
+.page-home .full-tank-hero .tank-wave-crest {
+  filter: drop-shadow(0 2px 9px rgba(217,255,255,.6));
 }
-.home-hero h1 { font-size: clamp(35px,4vw,56px); }
-.home-hero .hero-tank-shell {
-  position: relative;
-  z-index: 1;
-  order: 1;
-  min-width: 0;
-  display: grid;
-  place-items: center;
-}
-.home-hero .hero-tank {
-  width: min(100%, 580px);
-  aspect-ratio: 600 / 420;
-  position: relative;
-  inset: auto;
+.page-home .full-tank-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
   pointer-events: none;
-  transform: none;
-  overflow: visible;
-  filter: drop-shadow(0 20px 20px rgba(0,31,47,.2));
+  background: linear-gradient(90deg, rgba(2,32,47,.72) 0%, rgba(2,39,51,.5) 42%, rgba(0,57,72,.07) 90%),
+              linear-gradient(0deg, rgba(3,41,52,.24), transparent 55%);
+  z-index: 1;
 }
-.home-hero .hero-tank-water { position: static; display: block; width: 100%; height: 100%; overflow: visible; }
-.home-hero .tank-wave-crest { filter: drop-shadow(0 0 6px rgba(222,255,255,.45)); }
-.home-hero .home-water-number { font-size: clamp(34px,3.7vw,51px); margin-top: 14px; }
-.home-hero .home-water-detail { max-width: 340px; margin-bottom: 20px; }
-.home-hero .home-tank-disclaimer { color: #d0ecec; line-height: 1.5; max-width: 360px; }
-.home-stat-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap: 16px; }
-.home-stat { align-items: center; }
-.home-stat .stat-note { line-height: 1.45; }
-.home-comparison-note { margin: 13px 3px; font-size: 11px; }
-
-/* Uncluttered map: county paths stand directly against a calm tinted canvas. */
-.map-hero { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(260px,.7fr); gap: 18px; align-items: stretch; }
-.map-hero-main {
-  border: 0;
-  box-shadow: none;
-  border-radius: 22px;
-  background: linear-gradient(145deg,rgba(215,244,242,.65),rgba(197,235,237,.6));
-  padding: clamp(12px,2vw,26px);
+.page-home .hero-overlay-copy {
+  position: relative;
+  z-index: 2;
+  min-height: clamp(450px, 43vw, 620px);
+  max-width: 670px;
+  padding: clamp(28px, 5vw, 70px);
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  min-width: 0;
+  gap: 0;
+  color: white;
+  pointer-events: none;
 }
-.page-map .utah-map { display: block; width: 100%; height: auto; max-height: 690px; filter: drop-shadow(0 10px 14px rgba(11,68,77,.13)); }
-.page-map .utah-map .county {
-  fill: var(--county-fill, #b5e8e7);
-  stroke: #e8f9f6;
-  stroke-width: 1.4;
+.page-home .hero-overlay-copy .home-kicker {
+  color: #d2fafb;
+  font-size: 11px;
+  letter-spacing: .17em;
+  margin-bottom: 14px;
+}
+.page-home .hero-overlay-copy h1 {
+  color: white;
+  max-width: 590px;
+  font-size: clamp(38px, 5.3vw, 74px);
+  letter-spacing: -.045em;
+  line-height: 1.02;
+  margin: 0 0 14px;
+  text-wrap: balance;
+}
+.page-home .hero-overlay-sub {
+  color: rgba(243,255,255,.94);
+  line-height: 1.5;
+  font-size: 16px;
+  margin: 0 0 8px;
+  max-width: 450px;
+}
+.page-home .hero-overlay-copy .home-goal-line {
+  color: rgba(231,255,255,.85);
+  font-size: 12px;
+  margin: 0 0 22px;
+}
+.page-home .hero-overlay-copy .button-row { pointer-events: auto; }
+.page-home .full-tank-hero .button.primary { background: #e0ffff; color: #074458; }
+.page-home .full-tank-hero .button.secondary {
+  background: rgba(5,60,74,.5); color: white;
+  border-color: rgba(220,255,255,.42);
+}
+.page-home .home-stat-row { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; }
+.page-home .home-stat { display:flex; align-items:center; gap: 16px; }
+.page-home .home-stat .stat-note { line-height:1.5; }
+.page-home .home-comparison-note { font-size: 11px; margin: 12px 3px 0; }
+
+/* Map: full-scale map at left and a permanently visible ranking at right. */
+.page-map .map-main-head { display:flex; justify-content:space-between; align-items:center; gap: 16px; flex-wrap:wrap; margin: 0 0 12px; }
+.page-map .map-hero-title { font:600 22px/1.15 Outfit, sans-serif; }
+.page-map .map-demo-label { margin: 0 0 15px; color: #506c74; font-size: 12px; line-height: 1.5; }
+.page-map .map-layout {
+  display:grid;
+  grid-template-columns:minmax(0, 1.4fr) minmax(290px, .75fr);
+  align-items:stretch;
+  gap: 20px;
+}
+.page-map .map-main-card { min-width: 0; background: none; border: 0; padding: 0; box-shadow:none; }
+.page-map .map-canvas {
+  display:grid;
+  place-items:center;
+  min-height: 520px;
+  padding: 14px;
+  border: 0;
+  border-radius: 22px;
+  background: linear-gradient(130deg,rgba(210,244,245,.68),rgba(190,231,234,.56));
+}
+.page-map .utah-map { width: 100%; max-width: 540px; height:auto; max-height: 660px; display:block; filter: none; }
+.page-map .utah-map .county,
+.page-map .utah-map .county.active,
+.page-map .utah-map .county:hover,
+.page-map .utah-map .county:focus,
+.page-map .utah-map .county:focus-visible {
+  stroke: #effbfa;
+  stroke-width: 1.6px;
+  vector-effect: non-scaling-stroke;
+  transition: none !important;
   outline: none !important;
+  filter: none !important;
   cursor: pointer;
-  transition: filter .18s ease, stroke-width .18s ease;
 }
-.page-map .utah-map .county:hover { filter: brightness(1.15); stroke: #194d5c; stroke-width: 1.9; }
-.page-map .utah-map .county.active { stroke: #02384e; stroke-width: 3.8; filter: drop-shadow(0 1px 3px rgba(0,45,58,.3)); }
-.page-map .utah-map .county:focus-visible { outline: none !important; stroke: #034056; stroke-width: 3.8; }
-.map-demo-label { line-height: 1.55; }
-.map-side-panel { padding: clamp(20px,3vw,30px); min-height: 0; background: linear-gradient(145deg,#08475c,#117689); color: white; }
-.map-side-panel h2 { font-size: clamp(25px,3vw,37px); margin: 12px 0 20px; }
-.map-side-panel .map-side-label, .map-side-panel .map-selected-unit, .map-side-panel .map-side-foot { color: #d3f5f6; }
-.map-side-panel .map-selected-stat { font: 600 clamp(40px,4.7vw,69px)/1.1 Outfit,sans-serif; }
-.map-select-label { margin-top: 24px; }
-.map-select-label span { color: #d3f5f6; }
-.map-legend { width: 100%; max-width: 560px; margin: 14px 0 0; }
-.map-legend .legend-bar { border-radius:999px; height: 15px; }
-.map-legend .legend-bar.water { background: linear-gradient(90deg,hsl(192 76% 86%),hsl(192 76% 31%)); }
-.map-legend .legend-bar.electricity { background: linear-gradient(90deg,hsl(31 76% 86%),hsl(31 76% 31%)); }
-.map-legend .legend-labels { display:flex; justify-content:space-between; gap: 12px; color: #3a6470; font-size: 11px; margin-top: 7px; }
-.map-sources { margin-top: 17px; }
-.leaderboard-section { margin-top: 17px; }
+.page-map .utah-map .county { fill: var(--county-fill,#b8eaeb); }
+.page-map .utah-map .county.active { fill-opacity: .78; }
+.page-map .utah-map .county:hover, .page-map .utah-map .county:focus-visible { fill-opacity: .70; }
+.page-map .map-legend { width:100%; margin-top: 16px; max-width:none; }
+.page-map .map-legend .legend-bar { height: 13px; border-radius:999px; }
+.page-map .map-legend .legend-bar.water { background:linear-gradient(90deg,hsl(192 76% 86%),hsl(192 76% 31%)); }
+.page-map .map-legend .legend-bar.electricity { background:linear-gradient(90deg,hsl(31 76% 86%),hsl(31 76% 31%)); }
+.page-map .map-legend .legend-labels { display:flex; justify-content:space-between; gap: 10px; font-size:11px; margin-top:8px; }
+.page-map .map-side-panel {
+  min-height: 0;
+  display:flex;
+  flex-direction:column;
+  gap: 18px;
+  padding: 25px;
+  background: rgba(255,255,255,.81);
+  color:var(--ink);
+}
+.page-map .map-side-panel .map-selected-block { padding-bottom:18px; border-bottom:1px solid var(--line); }
+.page-map .map-side-label { color:var(--muted); font-size:11px; font-weight:700; letter-spacing:.12em; }
+.page-map .map-selected-block h2 { margin: 7px 0 6px; font-size: clamp(24px,2.5vw,33px); }
+.page-map .map-selected-stat { color:var(--ocean); font:600 clamp(30px,3.4vw,48px)/1.05 Outfit,sans-serif; margin-top: 4px; }
+.page-map .map-selected-unit { color:var(--muted); font-size: 12px; margin: 6px 0 14px; }
+.page-map .map-select-label span { color:var(--ink); }
+.page-map .map-ranking-head { display:flex; align-items:baseline; justify-content:space-between; gap: 6px; margin-bottom: 10px; }
+.page-map .map-ranking-head h3 { font-size: 19px; margin:0; }
+.page-map .map-ranking-head span { font-size:10px; color:var(--muted); text-align:right; }
+.page-map .county-ranking-list { list-style:none; padding:0; margin:0; display:grid; gap:5px; max-height:415px; overflow-y:auto; }
+.page-map .county-ranking-list li { min-width:0; }
+.page-map .county-ranking-item {
+  display:grid; width:100%; align-items:center;
+  grid-template-columns: 22px minmax(0,1fr) auto;
+  gap:8px; padding:8px 9px;
+  text-align:left; color:var(--ink);
+  background:#f6fbfc; border:1px solid #e2eeee; border-radius:10px;
+  box-shadow:none;
+}
+.page-map .county-ranking-item:hover, .page-map .county-ranking-item.selected { background:#def3f4; }
+.page-map .county-ranking-rank { font-size:11px; color:var(--muted); }
+.page-map .county-ranking-name { font-size:12px; min-width:0; }
+.page-map .county-ranking-value { font-size:12px; color:var(--ocean); white-space:nowrap; }
+.page-map .map-sources { margin-top: 18px; }
 
-/* Visually consistent impact cards and profile selectors. */
-.page-ripple .impact-destinations { display:grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
-.page-ripple .impact-card { margin: 0; }
-.page-ripple .impact-card h2 { font-size: clamp(21px,2vw,25px); }
-.page-ripple .impact-card p { font-size: 13px; line-height:1.55; color: var(--muted); }
-.page-ripple .ripple-simulator, .page-ripple .impact-tips, .page-ripple .ripple-goals { margin-top: 17px; }
-.page-ripple .impact-results { margin-top: 20px; }
-.page-profile .profile-visual-card { margin: 0; }
-.profile-visual-card .profile-question { margin: 25px 0 13px; }
-.profile-visual-card .home-choice-grid { grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-top: 10px; }
-.profile-visual-card .home-choice { display: flex; flex-direction:column; justify-content:center; align-items:center; gap:7px; min-width:0; min-height: 100px; }
-.profile-visual-card .home-choice.selected { border: 2px solid var(--teal); box-shadow:0 0 0 2px rgba(44,180,183,.1); }
-.profile-data-actions { display:flex; flex-wrap:wrap; gap:12px; margin:18px 0; }
-.profile-data .file-field { margin-top: 15px; }
+/* Save: clearly separated, equally spaced sections. */
+.page-ripple .save-page-header { display:flex; justify-content:flex-end; margin-bottom:20px; }
+.page-ripple .impact-top-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; margin-bottom:22px; }
+.page-ripple .impact-card { margin:0; min-height:168px; padding:22px; }
+.page-ripple .impact-card h2 { margin:0 0 10px; font-size:clamp(20px,2.1vw,25px); }
+.page-ripple .impact-card p { margin:0; font-size:13px; line-height:1.6; color:var(--muted); }
+.page-ripple .impact-panel { padding: 24px; }
+.page-ripple .ripple-simulator { margin-top:0; }
+.page-ripple .impact-results { margin-top:20px; }
+.page-ripple .impact-bottom-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; align-items:start; margin-top:22px; }
+.page-ripple .impact-tip-grid { display:grid; grid-template-columns:1fr; gap:12px; margin-top:12px; }
+.page-ripple .ripple-tip { padding:15px; background:#f5fbfb; border:1px solid #dceced; border-radius:12px; margin:0; }
+.page-ripple .ripple-tip h3 { font-size:15px; margin:0 0 5px; }
+.page-ripple .ripple-tip p { color:var(--muted); font-size:12px; margin:0; min-height:0; }
+.page-ripple .impact-panel > h2 { margin:0 0 10px; }
 
-@media (max-width: 1100px) {
-  .home-hero { grid-template-columns: 1fr 1fr; }
-  .map-hero { grid-template-columns: minmax(0,1.15fr) minmax(245px,.85fr); }
+/* Profile: center the entire form and the data preferences card. */
+.page-profile .profile-visual-card,
+.page-profile .profile-data {
+  width: min(100%, 900px);
+  max-width:900px;
+  margin-left:auto !important;
+  margin-right:auto !important;
 }
-@media (max-width: 800px) {
-  .home-hero { grid-template-columns: 1fr; gap: 0; }
-  .home-hero .hero-tank-shell { order: 1; }
-  .home-hero .hero-copy { order: 2; padding: 10px 15px 20px; }
-  .home-hero .hero-tank { max-width: 440px; }
-  .map-hero { grid-template-columns: 1fr; }
-  .page-ripple .impact-destinations { grid-template-columns: 1fr; }
-  .home-stat-row { grid-template-columns: 1fr; }
+.page-profile .profile-visual-card { padding:clamp(22px,3.5vw,42px); }
+.page-profile .profile-data { margin-top:20px; }
+.page-profile .profile-visual-card form { width:100%; }
+.page-profile .profile-question { margin:26px 0 12px; }
+.page-profile .home-choice-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.page-profile .home-choice { min-width:0; min-height:110px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px; }
+.page-profile .home-choice.selected { border:2px solid var(--teal); }
+.page-profile .profile-extra-fields { grid-template-columns: repeat(2,minmax(0,1fr)); gap:15px; }
+
+@media(max-width:1100px) {
+  .page-map .map-layout { grid-template-columns:minmax(0,1.2fr) minmax(250px,.8fr); gap:15px; }
 }
-@media (max-width: 560px) {
-  .home-hero { padding: 16px; min-height: 0; }
-  .home-hero .hero-copy { min-height: 0; }
-  .home-hero .hero-tank { max-width: 100%; }
-  .home-hero h1 { font-size: 37px; }
-  .home-hero .home-water-number { font-size: 35px; }
-  .map-hero-main { padding: 10px; }
-  .page-map .utah-map { max-height: 560px; }
-  .profile-visual-card .home-choice-grid { gap: 8px; }
-  .profile-visual-card .home-choice { padding: 11px 6px; font-size: 11px; min-height: 92px; }
-  .profile-visual-card .home-choice-icon { font-size: 26px; }
-  .residents-picker { flex-wrap: wrap; }
+@media(max-width:900px) {
+  .page-map .map-layout { grid-template-columns:1fr; }
+  .page-map .map-canvas { min-height:420px; }
+  .page-ripple .impact-top-grid { grid-template-columns:1fr; gap:15px; }
+  .page-ripple .impact-bottom-grid { grid-template-columns:1fr; }
+}
+@media(max-width:800px) {
+  .page-home .home-stat-row { grid-template-columns:1fr; }
+  .page-home .full-tank-hero, .page-home .hero-overlay-copy { min-height:530px; }
+  .page-home .hero-overlay-copy { padding:28px; justify-content:flex-end; }
+}
+@media(max-width:560px) {
+  .page-home .full-tank-hero, .page-home .hero-overlay-copy { min-height:520px; }
+  .page-home .hero-overlay-copy { padding:27px 22px; }
+  .page-home .hero-overlay-copy h1 { font-size:clamp(37px,10vw,52px); }
+  .page-map .map-canvas { min-height:350px; padding:9px; }
+  .page-map .utah-map { max-height:520px; }
+  .page-ripple .impact-card { min-height:auto; }
+  .page-profile .profile-extra-fields { grid-template-columns:1fr; }
+  .page-profile .home-choice-grid { gap:8px; }
+  .page-profile .home-choice { padding:12px 6px; font-size:11px; min-height:93px; }
 }
