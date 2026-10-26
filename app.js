@@ -237,11 +237,14 @@ function resourceSwitch() {
     '<button type="button" data-resource="water" aria-pressed="' + (state.resource === "water") + '" class="' + (state.resource === "water" ? "selected" : "") + '">Water</button>' +
     '<button type="button" data-resource="electricity" aria-pressed="' + (state.resource === "electricity") + '" class="' + (state.resource === "electricity" ? "selected" : "") + '">Electricity</button></div>';
 }
-function pageIntro(kicker, title, subtitle = "") {
-  return '<header class="intro"><h1>' + esc(title) + '</h1>' +
-    (subtitle ? '<p>' + esc(subtitle) + '</p>' : '') + '</header>';
+function pageIntro(kicker, title, subtitle) {
+  return `
+    <header class="intro">
+      <h1>${esc(title)}</h1>
+      ${subtitle ? `<p>${esc(subtitle)}</p>` : ''}
+    </header>
+  `;
 }
-
 function renderShell() {
   document.documentElement.classList.toggle('reduce-motion', state.reduceMotion);
   // Keep keyboard users on the control they activated after replacing the view.
@@ -273,6 +276,7 @@ function renderShell() {
     '</main></div>';
   if (focusKey) app.querySelector('[' + focusKey + '="' + CSS.escape(focusValue) + '"]')?.focus({ preventScroll: true });
   startWaterWaves();
+  toggleTilt(true);
 }
 function showValidationNotice(message) {
   // Keep the user's draft and focus intact when application validation fails.
@@ -293,78 +297,148 @@ function reducedMotion() { return state.reduceMotion || window.matchMedia('(pref
 function renderHome() {
   const water = latestAndPrevious('water');
   const electricity = latestAndPrevious('electricity');
+
   const waterChange = dailyChange(water.latest, water.previous);
   const electricChange = dailyChange(electricity.latest, electricity.previous);
-  // Difference between two billing-period daily averages, scaled to the latest bill.
-  // This is not a verified conservation measurement (weather, occupancy and season vary).
+
   const waterDifference = water.latest && water.previous
-    ? (daily(water.previous) - daily(water.latest)) * water.latest.days : null;
+    ? (daily(water.previous) - daily(water.latest)) * water.latest.days
+    : null;
+
   const electricDifference = electricity.latest && electricity.previous
-    ? (daily(electricity.previous) - daily(electricity.latest)) * electricity.latest.days : null;
-  const goal = Number(state.profile.waterGoal);
-  const tankLevel = water.latest && goal > 0
-    ? Math.max(8, Math.min(93, monthlyEquivalent(water.latest) / goal * 100)) : 51;
-  const tankCaption = water.latest && goal > 0
-    ? number(monthlyEquivalent(water.latest) / goal * 100, 0) + '% of your monthly water goal (capped in animation)'
-    : 'Decorative water animation · not a storage reading';
-  const tiltAvailable = !reducedMotion() && window.isSecureContext && typeof DeviceOrientationEvent !== 'undefined';
-  const motionHint = reducedMotion() ? 'Reduced motion is on.' :
-    !window.isSecureContext ? 'Phone tilt requires HTTPS.' :
-    typeof DeviceOrientationEvent === 'undefined' ? 'Move over the tank or touch it to make waves.' :
-    (tiltMessage || 'Move over the tank, or enable phone tilt to slosh the water.');
-  const waterDifferenceText = waterDifference === null ? '—'
-    : (waterDifference > 0 ? number(waterDifference, 0) + ' gal less' :
-      waterDifference < 0 ? number(Math.abs(waterDifference), 0) + ' gal more' : 'No change');
-  const electricDifferenceText = electricDifference === null ? '—'
-    : (electricDifference > 0 ? number(electricDifference, 1) + ' kWh less' :
-      electricDifference < 0 ? number(Math.abs(electricDifference), 1) + ' kWh more' : 'No change');
+    ? (daily(electricity.previous) - daily(electricity.latest)) * electricity.latest.days
+    : null;
+
+  const waterGoal = Number(state.profile.waterGoal);
+  const tankLevel = water.latest && waterGoal > 0
+    ? Math.max(8, Math.min(92, monthlyEquivalent(water.latest) / waterGoal * 100))
+    : water.latest ? Math.max(12, Math.min(85, monthlyEquivalent(water.latest) / 12000 * 100)) : 48;
+
+  const savedPercent = waterChange === null ? null : Math.abs(waterChange).toFixed(1) + '%';
+  const savedGallonsText = waterDifference === null
+    ? 'Add two water bills to compare.'
+    : waterDifference > 0
+      ? `${number(waterDifference, 0)} gallons less than your previous bill`
+      : waterDifference < 0
+        ? `${number(Math.abs(waterDifference), 0)} gallons more than your previous bill`
+        : 'No change from your previous bill';
+
+  const electricDifferenceText = electricDifference === null
+    ? 'Add two electricity bills to compare.'
+    : electricDifference > 0
+      ? `${number(electricDifference, 1)} kWh less than your previous bill`
+      : electricDifference < 0
+        ? `${number(Math.abs(electricDifference), 1)} kWh more than your previous bill`
+        : 'No change from your previous bill';
+
+  const waterDailyText = waterChange === null
+    ? 'No comparison yet'
+    : `${savedPercent} ${waterChange < 0 ? 'lower' : waterChange > 0 ? 'higher' : 'change'} daily water use`;
+
+  const electricDailyText = electricChange === null
+    ? 'No comparison yet'
+    : `${Math.abs(electricChange).toFixed(1)}% ${electricChange < 0 ? 'lower' : electricChange > 0 ? 'higher' : 'change'} daily use`;
+
+  const goalCaption = water.latest && waterGoal > 0
+    ? `${number(monthlyEquivalent(water.latest), 0)} gal this month · ${number(tankLevel, 0)}% of your water goal`
+    : water.latest
+      ? `${number(monthlyEquivalent(water.latest), 0)} gal this month`
+      : 'Preview tank · add a water bill';
+
   return `
-    <section class="card hero hero-flow-demo home-hero">
-      <div class="hero-tank" aria-hidden="true" style="--tank-level:${tankLevel.toFixed(2)}%">
-        <svg class="hero-tank-water" preserveAspectRatio="none">
-          <defs>
-            <linearGradient id="tank-front-fill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#56dae4"/><stop offset="0.5" stop-color="#069ab1"/><stop offset="1" stop-color="#074f6c"/>
-            </linearGradient>
-            <linearGradient id="tank-back-fill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#bcffff" stop-opacity=".85"/>
-              <stop offset="1" stop-color="#35bacb" stop-opacity=".4"/>
-            </linearGradient>
-          </defs>
-          <path class="tank-wave-back" fill="url(#tank-back-fill)"></path>
-          <path class="tank-wave-front" fill="url(#tank-front-fill)"></path>
-          <path class="tank-wave-crest" stroke="rgba(233,255,255,.95)" stroke-width="3" fill="none"></path>
-        </svg><div class="tank-ripple"></div>
+    <section class="card hero home-hero">
+      <div class="hero-tank-shell">
+        <div class="hero-tank" aria-hidden="true" style="--tank-level:${tankLevel.toFixed(2)}%">
+          <svg class="hero-tank-water" preserveAspectRatio="none" viewBox="0 0 600 420">
+            <defs>
+              <clipPath id="tankClip">
+                <rect x="28" y="18" width="544" height="372" rx="34" ry="34"></rect>
+              </clipPath>
+
+              <linearGradient id="tankGlass" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="rgba(255,255,255,.36)"></stop>
+                <stop offset="60%" stop-color="rgba(255,255,255,.08)"></stop>
+                <stop offset="100%" stop-color="rgba(255,255,255,.18)"></stop>
+              </linearGradient>
+
+              <linearGradient id="waterDeep" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#82f0f6"></stop>
+                <stop offset="45%" stop-color="#23b8ce"></stop>
+                <stop offset="100%" stop-color="#095b78"></stop>
+              </linearGradient>
+
+              <linearGradient id="waterBack" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgba(209,255,255,.85)"></stop>
+                <stop offset="100%" stop-color="rgba(72,205,220,.35)"></stop>
+              </linearGradient>
+
+              <filter id="waterBlur" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="2.4"></feGaussianBlur>
+              </filter>
+            </defs>
+
+            <g clip-path="url(#tankClip)">
+              <path class="tank-wave-back" fill="url(#waterBack)"></path>
+              <path class="tank-wave-front" fill="url(#waterDeep)"></path>
+              <path class="tank-wave-crest" fill="none" stroke="rgba(234,255,255,.95)" stroke-width="4"></path>
+
+              <ellipse class="tank-shimmer" cx="300" cy="120" rx="220" ry="34" fill="rgba(255,255,255,.12)" filter="url(#waterBlur)"></ellipse>
+
+              <g class="tank-bubbles">
+                <circle cx="120" cy="320" r="5"></circle>
+                <circle cx="200" cy="280" r="3"></circle>
+                <circle cx="340" cy="340" r="4"></circle>
+                <circle cx="430" cy="260" r="6"></circle>
+                <circle cx="500" cy="310" r="3"></circle>
+              </g>
+            </g>
+
+            <rect class="tank-glass" x="28" y="18" width="544" height="372" rx="34" ry="34" fill="url(#tankGlass)" stroke="rgba(255,255,255,.5)" stroke-width="3"></rect>
+          </svg>
+        </div>
       </div>
+
       <div class="hero-copy">
         <div class="home-kicker">YOUR WATER</div>
         <h1>See the difference.</h1>
-        <p>Track water and electricity. Find changes worth making.</p>
-        <div class="home-water-number">${waterDifferenceText}</div>
-        <div class="home-water-detail">${waterChange === null ? 'Add two water bills to compare your usage.' :
-          Math.abs(waterChange).toFixed(1) + '% ' + (waterChange < 0 ? 'lower' : waterChange > 0 ? 'higher' : 'change') +
-          ' daily water use than your previous bill'}</div>
-        <div class="button-row"><button type="button" class="button primary" data-nav="usage">Add a bill</button>
-          <button type="button" class="button secondary" data-nav="map">Explore Utah</button></div>
-        <div class="tank-motion"><button type="button" class="tilt-toggle" data-tilt ${tiltAvailable ? '' : 'disabled'}>${tiltEnabled ? 'Turn tilt off' : 'Enable phone tilt'}</button>
-          <p class="motion-hint" id="tilt-status" role="status">${esc(motionHint)}</p></div>
-        <div class="home-tank-disclaimer">${esc(tankCaption)}</div>
+        <p>Track water and electricity. Focus on what changed.</p>
+
+        <div class="home-water-number">
+          ${waterDifference === null ? '—' : (waterDifference > 0 ? `${number(waterDifference, 0)} gal saved` : waterDifference < 0 ? `${number(Math.abs(waterDifference), 0)} gal more` : 'No change')}
+        </div>
+
+        <div class="home-water-detail">
+          ${savedGallonsText}
+        </div>
+
+        <div class="home-goal-line">${goalCaption}</div>
+
+        <div class="button-row">
+          <button type="button" class="button primary" data-nav="usage">Add a bill</button>
+          <button type="button" class="button secondary" data-nav="map">Explore Utah</button>
+        </div>
       </div>
     </section>
+
     <section class="home-stat-row">
-      <article class="card home-stat"><div class="home-stat-icon">💧</div><div>
-        <span class="stat-label">Latest water bill</span>
-        <div class="home-stat-number">${water.latest ? number(water.latest.amount, 0) + ' gal' : 'No data'}</div>
-        <p class="stat-note">${water.latest ? esc(monthLabel(water.latest.month)) : 'Add your first bill'}</p>
-      </div></article>
-      <article class="card home-stat"><div class="home-stat-icon">⚡</div><div>
-        <span class="stat-label">Electricity vs. previous bill</span>
-        <div class="home-stat-number">${electricDifferenceText}</div>
-        <p class="stat-note">${electricChange === null ? 'Add two electricity bills to compare' :
-          Math.abs(electricChange).toFixed(1) + '% ' + (electricChange < 0 ? 'lower' : electricChange > 0 ? 'higher' : 'change') + ' daily use'}</p>
-      </div></article>
+      <article class="card home-stat">
+        <div class="home-stat-icon">💧</div>
+        <div>
+          <span class="stat-label">Water</span>
+          <div class="home-stat-number">${water.latest ? `${number(water.latest.amount, 0)} gal` : 'No data'}</div>
+          <p class="stat-note">${water.latest ? waterDailyText : 'Add a water bill'}</p>
+        </div>
+      </article>
+
+      <article class="card home-stat">
+        <div class="home-stat-icon">⚡</div>
+        <div>
+          <span class="stat-label">Electricity</span>
+          <div class="home-stat-number">${electricity.latest ? `${number(electricity.latest.amount, 0)} kWh` : 'No data'}</div>
+          <p class="stat-note">${electricity.latest ? electricDailyText : electricDifferenceText}</p>
+        </div>
+      </article>
     </section>
-    <p class="home-comparison-note">Differences compare daily usage between your two latest bills and scale it to the latest billing period. They aren't verified savings; seasons and household changes affect bills.</p>
   `;
 }
 
@@ -492,37 +566,77 @@ function field(label, control, hint = "") {
 }
 function renderProfile() {
   const p = state.profile;
+
   const houses = [
-    {value: 'apartment', icon: '🏢', label: 'Apartment'},
-    {value: 'townhome', icon: '🏘️', label: 'Townhome'},
-    {value: 'house', icon: '🏡', label: 'House'}
+    { value: 'apartment', icon: '🏢', label: 'Apartment' },
+    { value: 'townhome', icon: '🏘️', label: 'Townhome' },
+    { value: 'house', icon: '🏡', label: 'House' }
   ];
-  return pageIntro('', 'Your Household', 'A few details help make your comparisons useful.') +
-    '<section class="card profile-visual-card"><form id="profile-form">' +
-      '<h2>How many people live here?</h2>' +
-      '<div class="residents-picker"><span class="residents-graphic" aria-hidden="true">👥</span>' +
-      '<button class="residents-step" type="button" data-residents-step="-1" aria-label="Remove one person">−</button>' +
-      '<input name="residents" type="number" min="1" max="30" step="1" required aria-label="People in household" value="' + esc(p.residents) + '">' +
-      '<button class="residents-step" type="button" data-residents-step="1" aria-label="Add one person">+</button></div>' +
-      '<h2 class="profile-question">What kind of home?</h2>' +
-      '<input type="hidden" name="home" value="' + esc(p.home) + '">' +
-      '<div class="home-choice-grid" role="group" aria-label="Home type">' + houses.map(h =>
-        '<button type="button" class="home-choice ' + (p.home === h.value ? 'selected' : '') + '" data-home-choice="' + h.value + '" aria-pressed="' + (p.home === h.value) + '"><span class="home-choice-icon" aria-hidden="true">' + h.icon + '</span><span>' + h.label + '</span></button>'
-      ).join('') + '</div>' +
-      '<div class="profile-extra-fields">' +
-        field('City or ZIP (optional)', '<input name="city" maxlength="80" value="' + esc(p.city) + '" placeholder="e.g. Provo">') +
-        field('Monthly water goal (gal)', '<input name="waterGoal" type="number" min="0.01" max="100000000000" step="any" value="' + esc(p.waterGoal) + '" placeholder="Optional">') +
-        field('Monthly electricity goal (kWh)', '<input name="electricGoal" type="number" min="0.01" max="100000000000" step="any" value="' + esc(p.electricGoal) + '" placeholder="Optional">') +
-      '</div>' +
-      '<div class="profile-options"><label class="check"><input name="lawn" type="checkbox" ' + (p.lawn ? 'checked' : '') + '> 🌿 We have a lawn or garden</label>' +
-      '<label class="check"><input name="irrigation" type="checkbox" ' + (p.irrigation ? 'checked' : '') + '> 💦 Our water bill includes irrigation</label></div>' +
-      '<button class="button primary profile-save" type="submit">Save household</button></form></section>' +
-    '<details class="card profile-data"><summary>Your data & preferences</summary>' +
-      '<p class="muted">Records are stored in this browser. Export a backup before clearing anything.</p>' +
-      '<div class="button-row"><button class="button secondary" type="button" data-extra="backup">Download backup</button>' +
-      '<button class="button danger" type="button" data-extra="clear-local">Clear saved data</button></div>' +
-      '<label class="field file-field"><span>Restore a backup</span><input type="file" accept=".json,application/json" data-import-backup></label>' +
-      '<label class="check"><input type="checkbox" data-reduce-motion ' + (state.reduceMotion ? 'checked' : '') + '> Reduce animations</label></details>';
+
+  const priorities = [
+    { value: 'water', icon: '💧', label: 'Water' },
+    { value: 'electricity', icon: '⚡', label: 'Electricity' },
+    { value: 'both', icon: '🌎', label: 'Both' }
+  ];
+
+  const currentPriority = p.priority || 'both';
+
+  return pageIntro('', 'Profile', 'Set up your household details.') + `
+    <section class="card profile-visual-card">
+      <form id="profile-form">
+        <h2>Household size</h2>
+        <div class="residents-picker">
+          <span class="residents-graphic" aria-hidden="true">👥</span>
+          <button class="residents-step" type="button" data-residents-step="-1" aria-label="Remove one person">−</button>
+          <input name="residents" type="number" min="1" max="30" step="1" required value="${esc(p.residents)}">
+          <button class="residents-step" type="button" data-residents-step="1" aria-label="Add one person">+</button>
+        </div>
+
+        <h2 class="profile-question">Home type</h2>
+        <input type="hidden" name="home" value="${esc(p.home)}">
+        <div class="home-choice-grid">
+          ${houses.map(h => `
+            <button type="button" class="home-choice ${p.home === h.value ? 'selected' : ''}" data-home-choice="${h.value}" aria-pressed="${p.home === h.value}">
+              <span class="home-choice-icon">${h.icon}</span>
+              <span>${h.label}</span>
+            </button>
+          `).join('')}
+        </div>
+
+        <h2 class="profile-question">What do you want to focus on?</h2>
+        <input type="hidden" name="priority" value="${esc(currentPriority)}">
+        <div class="home-choice-grid">
+          ${priorities.map(item => `
+            <button type="button" class="home-choice ${currentPriority === item.value ? 'selected' : ''}" data-priority-choice="${item.value}" aria-pressed="${currentPriority === item.value}">
+              <span class="home-choice-icon">${item.icon}</span>
+              <span>${item.label}</span>
+            </button>
+          `).join('')}
+        </div>
+
+        <div class="profile-extra-fields">
+          ${field('City or ZIP (optional)', `<input name="city" maxlength="80" value="${esc(p.city)}" placeholder="e.g. Provo">`)}
+          ${field('Monthly water goal (gal)', `<input name="waterGoal" type="number" min="0.01" max="100000000000" step="any" value="${esc(p.waterGoal)}" placeholder="Optional">`)}
+          ${field('Monthly electricity goal (kWh)', `<input name="electricGoal" type="number" min="0.01" max="100000000000" step="any" value="${esc(p.electricGoal)}" placeholder="Optional">`)}
+        </div>
+
+        <div class="profile-options">
+          <label class="check"><input name="lawn" type="checkbox" ${p.lawn ? 'checked' : ''}> 🌿 We have a lawn or garden</label>
+          <label class="check"><input name="irrigation" type="checkbox" ${p.irrigation ? 'checked' : ''}> 💦 Our water bill includes irrigation</label>
+        </div>
+
+        <button class="button primary profile-save" type="submit">Save profile</button>
+      </form>
+    </section>
+
+    <details class="card profile-data">
+      <summary>Your data & preferences</summary>
+      <div class="profile-data-actions">
+        <button class="button secondary" type="button" data-export-json>Export app data</button>
+        <button class="button danger" type="button" data-reset-data>Reset all app data</button>
+      </div>
+    </details>
+  `;
 }
 
 function demoCountyUsage(county, type = state.resource) {
@@ -539,42 +653,58 @@ function usageDemoColor(value, type) {
   return 'hsl(' + (type === 'water' ? 192 : 31) + ' 76% ' + light + '%)';
 }
 function renderMap() {
-  const counties = countyMap?.counties || [];
-  const chosen = counties.find(c => c.name === state.region) || counties.find(c => c.name === 'Salt Lake');
-  const name = chosen?.name || 'Salt Lake';
-  const isWater = state.resource === 'water';
-  const val = chosen ? demoCountyUsage(chosen) : null;
-  const label = isWater ? 'gal/person/day' : 'kWh/account/day';
-  const colorData = counties.map(county => {
-    const amount = demoCountyUsage(county);
-    return '<path class="county ' + (county.name === name ? 'active' : '') + '" d="' + county.path +
-      '" style="--county-fill:' + usageDemoColor(amount, state.resource) + '" data-region="' + esc(county.name) +
-      '" role="button" tabindex="0" aria-label="' + esc(county.name) + ' County, fictional usage ' + amount + ' ' + label +
-      '"><title>' + esc(county.name) + ' County · sample ' + amount + ' ' + label + '</title></path>';
-  }).join('');
-  return pageIntro('', 'Explore Utah', 'Tap a county to see its sample usage.') +
-    '<div class="map-hero-top"><div class="map-hero-title"><span class="map-icon">⌖</span><strong>Utah, county by county</strong></div>' + resourceSwitch() + '</div>' +
-    '<p class="map-demo-label"><strong>FICTIONAL DATA</strong> · Colors illustrate how a county usage map could work. No measured county household data is shown.</p>' +
-    '<section class="map-stage">' +
-      '<div class="map-canvas">' + (counties.length ? '<svg class="utah-map" viewBox="0 0 380 510" role="group" aria-label="Utah counties colored by fictional household ' + (isWater ? 'water' : 'electricity') + ' use">' + colorData + '</svg>' :
-        '<div class="empty">' + (countyLoadError ? esc(countyLoadError) : 'Loading Utah counties…') + '</div>') +
-      '<div class="map-gradient-legend"><div class="map-gradient-bar ' + (isWater ? 'water' : 'electricity') + '"></div><span>Less example use</span><span>More example use</span></div></div>' +
-      '<aside class="map-side"><span class="map-side-label">SELECTED COUNTY</span><h2>' + esc(name) + '</h2>' +
-        '<div class="map-selected-stat">' + (val === null ? '—' : number(val, 1)) + '</div>' +
-        '<div class="map-selected-unit">sample ' + label + '</div>' +
-        '<label class="field map-select-label"><span>Choose a county</span><select data-county-select ' + (counties.length ? '' : 'disabled') + '>' +
-        counties.map(c => '<option value="' + esc(c.name) + '" ' + selectedOption(c.name, name) + '>' + esc(c.name) + ' County</option>').join('') +
-        '</select></label>' +
-        '<p class="map-side-foot">Darker counties represent higher usage in this fictional example, <strong>not actual Utah statistics</strong>.</p></aside>' +
-    '</section>' +
-    renderRegionalLeaderboard(counties, name, true) +
-    '<details class="card map-sources"><summary>About the data</summary>' +
-      '<p>These county usage numbers are intentionally simulated to illustrate the map. They do not represent real county water or electricity consumption, participant counts, or savings.</p>' +
-      '<p>County boundaries: <a href="https://gis.utah.gov/products/sgid/boundaries/county/" target="_blank" rel="noopener noreferrer">Utah SGID</a>. ' +
-      'Statewide context (not county estimates): <a href="' + USGS_DOMESTIC_SOURCE + '" target="_blank" rel="noopener noreferrer">USGS water</a> · ' +
-      '<a href="' + EIA_SOURCE + '" target="_blank" rel="noopener noreferrer">EIA electricity</a>.</p></details>';
-}
+  const region = showcaseCountyStats?.[state.region] || null;
+  const sorted = Object.entries(showcaseCountyStats || {})
+    .sort((a, b) => (b[1]?.waterUse || 0) - (a[1]?.waterUse || 0))
+    .slice(0, 5);
 
+  return pageIntro('', 'Explore Utah', 'Sample county data shown for demonstration only.') + `
+    <section class="map-hero">
+      <div class="map-hero-main">
+        ${renderCountyMap()}
+      </div>
+
+      <aside class="map-side-panel card">
+        <h2>${esc(state.region)}</h2>
+        ${region ? `
+          <div class="map-metric-group">
+            <div class="map-metric">
+              <span class="stat-label">Water use</span>
+              <div class="stat-value">${number(region.waterUse || 0, 0)} gal</div>
+            </div>
+            <div class="map-metric">
+              <span class="stat-label">Electricity use</span>
+              <div class="stat-value">${number(region.electricityUse || 0, 0)} kWh</div>
+            </div>
+          </div>
+          <p class="stat-note">Demo county totals for the Ripples prototype.</p>
+        ` : `<p class="stat-note">Select a county to view details.</p>`}
+
+        <div class="map-legend">
+          <div class="legend-title">Water use scale</div>
+          <div class="legend-bar"></div>
+          <div class="legend-labels">
+            <span>Lower</span>
+            <span>Higher</span>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="card top-counties-card">
+      <h2>Highest sample water use</h2>
+      <div class="top-county-list">
+        ${sorted.map(([name, data], index) => `
+          <button type="button" class="top-county-item ${state.region === name ? 'selected' : ''}" data-county="${esc(name)}">
+            <span class="top-rank">#${index + 1}</span>
+            <span class="top-name">${esc(name)}</span>
+            <strong>${number(data.waterUse || 0, 0)} gal</strong>
+          </button>
+        `).join('')}
+      </div>
+    </section>
+  `;
+}
 function renderRegionalLeaderboard(counties, selectedName) {
   if (!counties.length) return '';
   const label = state.resource === 'water' ? 'gal/person/day' : 'kWh/account/day';
@@ -652,44 +782,87 @@ async function loadCountyMap() {
   }
 }
 function renderRipple() {
-  const water = state.resource === 'water';
-  const p = state.profile;
-  const themes = water ? [
-    {icon:'🌊', title:'Great Salt Lake', description:'Using less water can reduce demand on shared supplies. It does not mean saved household gallons flow directly into the lake.'},
-    {icon:'🏞️', title:'Rivers & reservoirs', description:'Less demand can help conservation planning and resilience, depending on local water management.'},
-    {icon:'🏠', title:'Your community', description:'Reducing waste can lower demand on the systems that deliver and treat household water.'}
-  ] : [
-    {icon:'⚡', title:'The power grid', description:'Using fewer kWh reduces household electricity demand. The generation and emissions impact varies by time and supply.'},
-    {icon:'🌎', title:'Energy resources', description:'Efficiency can reduce the energy needed to supply homes, especially during high-demand hours.'},
-    {icon:'🏠', title:'Your household', description:'Using less electricity may reduce your bill, depending on rates and fixed charges.'}
-  ];
-  const cards = themes.map(t => '<article class="impact-destination"><span class="impact-emoji" aria-hidden="true">' + t.icon + '</span><h3>' + t.title + '</h3><p>' + t.description + '</p></article>').join('');
-  const tipIds = water ? ['hidden-leaks', p.lawn ? 'outdoor-watering' : 'efficient-fixtures', 'full-laundry'] : ['idle-power'];
-  const tips = tipIds.map(id => ACTION_CATALOG.find(a => a.id === id)).filter(Boolean)
-    .map(a => '<article class="ripple-simple-tip"><h3>' + esc(a.title) + '</h3><p>' + esc(a.action) + '</p></article>').join('');
-  const electricTips = water ? '' : '<article class="ripple-simple-tip"><h3>Switch to LEDs</h3><p>Choose LED bulbs when replacing frequently used lights.</p></article>' +
-    '<article class="ripple-simple-tip"><h3>Check the thermostat</h3><p>Adjust heating and cooling when you are away, when practical.</p></article>';
-  const calculator = water
-    ? '<section class="card ripple-simulator"><div class="impact-calculator-label">TRY A CHANGE</div><h2>Shorter showers</h2><p class="muted">Estimate how many gallons you could save.</p>' +
-        slider('Current shower length', 'current', 1, 30, simulation.current, 'min') +
-        slider('New shower length', 'target', 1, 30, simulation.target, 'min') +
-        slider('People showering daily', 'household', 1, 30, simulation.household ?? p.residents, 'people') +
-        slider('Showerhead flow rate', 'flow', .5, 5, simulation.flow, 'gal/min', .1) +
-        '<div class="grid two ripple-output"><div><div class="stat-label">Monthly estimate</div><div class="stat-value" id="sim-monthly">—</div><small>gal / 30 days</small></div>' +
-        '<div><div class="stat-label">Yearly estimate</div><div class="stat-value" id="sim-yearly">—</div><small>gal / 365 days</small></div></div>' +
-        '<p class="fineprint" id="sim-explanation"></p></section>'
-    : '<section class="card ripple-simulator"><div class="impact-calculator-label">TRY A CHANGE</div><h2>Standby electricity</h2><p class="muted">Estimate the kWh avoided by switching off idle devices.</p>' + renderActionEstimate('idle-power') + '</section>';
-  return pageIntro('', 'Your Impact', 'See why conserving water and electricity matters.') +
-    '<div class="section-spotlight impact-switch"><span class="spotlight-icon">' + (water ? '💧' : '⚡') + '</span><strong>' + (water ? 'Water' : 'Electricity') + ' impact</strong>' + resourceSwitch() + '</div>' +
-    '<section class="impact-intro"><div class="impact-orb">' + (water ? '💧' : '⚡') + '</div>' +
-      '<h2>Where could it make a difference?</h2>' +
-      '<p>What you conserve stays part of a bigger system. Here are places reduced demand can matter.</p></section>' +
-    '<section class="impact-destinations" aria-label="Potential conservation benefits">' + cards + '</section>' +
-    '<p class="impact-caution">These are potential system-wide benefits, not destinations for specific gallons or a claim of measured environmental impact.</p>' +
-    calculator +
-    '<details class="card impact-tips"><summary>Simple ways to use less</summary><div class="impact-tip-grid">' + tips + electricTips + '</div></details>' +
-    '<details class="card ripple-goal-details"><summary>Set a monthly reduction goal</summary>' +
-      renderMeasuredGoals().replace(/^<section class="card feature-section">|<\/section>$/g, '') + '</details>';
+  const isWater = state.resource === 'water';
+
+  const destinationCards = isWater
+    ? [
+        { title: 'Great Salt Lake', text: 'Lower household demand supports broader long-term conservation awareness around Utah water systems.' },
+        { title: 'Rivers & reservoirs', text: 'Using less water helps reduce strain on the systems that move and store water across Utah.' },
+        { title: 'Your household', text: 'Smaller changes can show up in future bills and build better conservation habits.' }
+      ]
+    : [
+        { title: 'Utah power demand', text: 'Using less electricity can reduce household demand and make your future bills easier to manage.' },
+        { title: 'Your home', text: 'Lower standby or unnecessary use helps cut waste from everyday devices.' },
+        { title: 'Long-term habits', text: 'Small electricity changes are easier to keep when you can see the effect over time.' }
+      ];
+
+  const tipIds = isWater
+    ? ['shorter-showers', 'hidden-leaks', 'outdoor-watering']
+    : ['idle-power', 'full-laundry'];
+
+  const tips = tipIds
+    .map(id => ACTION_CATALOG.find(item => item.id === id))
+    .filter(Boolean);
+
+  return pageIntro('', 'Your Impact', 'See where your resource savings matter.') + `
+    <div class="card-head">
+      <div></div>
+      ${resourceSwitch()}
+    </div>
+
+    <section class="impact-destinations">
+      ${destinationCards.map(card => `
+        <article class="card impact-card">
+          <h2>${esc(card.title)}</h2>
+          <p>${esc(card.text)}</p>
+        </article>
+      `).join('')}
+    </section>
+
+    <section class="card ripple-simulator">
+      <h2>${isWater ? 'Water savings calculator' : 'Electricity savings calculator'}</h2>
+      <p class="muted">${isWater ? 'Estimate how shorter showers could reduce water use.' : 'Estimate how reducing standby power could lower electricity use.'}</p>
+      ${isWater ? `
+        ${slider('Current shower length', 'current', 1, 30, simulation.current, 'min')}
+        ${slider('New shower length', 'target', 1, 30, simulation.target, 'min')}
+        ${slider('People showering daily', 'household', 1, 30, simulation.household ?? state.profile.residents, 'people')}
+        ${slider('Showerhead flow', 'flow', .5, 5, simulation.flow, 'gal/min', .1)}
+
+        <div class="grid two impact-results">
+          <div>
+            <div class="stat-label">Estimated monthly savings</div>
+            <div class="stat-value" id="sim-monthly">—</div>
+            <small>gallons / 30 days</small>
+          </div>
+          <div>
+            <div class="stat-label">Estimated yearly savings</div>
+            <div class="stat-value" id="sim-yearly">—</div>
+            <small>gallons / 365 days</small>
+          </div>
+        </div>
+        <p class="fineprint" id="sim-explanation"></p>
+      ` : `
+        ${renderActionEstimate('idle-power')}
+      `}
+    </section>
+
+    <details class="card impact-tips">
+      <summary>Ways to save</summary>
+      <div class="grid three">
+        ${tips.map(item => `
+          <article class="tip ripple-tip">
+            <h3>${esc(item.title)}</h3>
+            <p>${esc(item.action)}</p>
+          </article>
+        `).join('')}
+      </div>
+    </details>
+
+    <details class="card ripple-goals">
+      <summary>Set a monthly reduction goal</summary>
+      ${renderMeasuredGoals().replace(/^<section class="card feature-section">|<\/section>$/g, '')}
+    </details>
+  `;
 }
 
 function renderRippleTip(action) {
@@ -814,59 +987,96 @@ function updateSimulation() {
     if (node) node.textContent = text;
   }
 }
-function waveLine(width, base, tilt, amplitude, phase, frequency) {
+function waveLine(width, base, tilt, amplitude, phase, frequency, harmonics = 3) {
   const points = [];
-  for (let i = 0; i <= 36; i++) {
-    const x = width * i / 36;
-    const position = i / 36;
-    const y = base + tilt * (position - .5) +
-      Math.sin(position * Math.PI * frequency + phase) * amplitude +
-      Math.sin(position * Math.PI * (frequency * 1.83) - phase * .66) * amplitude * .26;
+  const steps = 72;
+
+  for (let i = 0; i <= steps; i++) {
+    const x = width * i / steps;
+    const position = i / steps;
+
+    let y = base + tilt * (position - 0.5);
+
+    y += Math.sin(position * Math.PI * frequency + phase) * amplitude;
+    y += Math.sin(position * Math.PI * (frequency * 1.83) - phase * 0.66) * amplitude * 0.34;
+    y += Math.sin(position * Math.PI * (frequency * 2.7) + phase * 1.22) * amplitude * 0.14;
+
+    if (harmonics > 3) {
+      y += Math.sin(position * Math.PI * (frequency * 3.5) - phase * 1.8) * amplitude * 0.08;
+    }
+
     points.push((i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1));
   }
+
   return points.join(' ');
 }
+
 function drawWaterWave() {
   const tank = app.querySelector('.hero-tank');
-  if (!tank) { waterWave.frame = 0; return; }
+  if (!tank) {
+    waterWave.frame = 0;
+    return;
+  }
+
   const svg = tank.querySelector('.hero-tank-water');
   const width = tank.clientWidth;
   const height = tank.clientHeight;
-  if (!width || !height) { waterWave.frame = requestAnimationFrame(drawWaterWave); return; }
+
+  if (!width || !height) {
+    waterWave.frame = requestAnimationFrame(drawWaterWave);
+    return;
+  }
+
   const still = reducedMotion();
+
   if (!still) {
-    waterWave.velocity += (waterWave.target - waterWave.angle) * .105 - waterWave.velocity * .12;
+    waterWave.velocity += (waterWave.target - waterWave.angle) * 0.11 - waterWave.velocity * 0.08;
     waterWave.angle += waterWave.velocity;
-    waterWave.energy *= .978;
-    waterWave.phase += .048;
+    waterWave.energy *= 0.985;
+    waterWave.phase += 0.06;
   } else {
     waterWave.angle = 0;
     waterWave.velocity = 0;
     waterWave.energy = 0;
   }
+
   const level = Math.max(0, Math.min(100, parseFloat(tank.style.getPropertyValue('--tank-level')) || 0));
-  if (level === 0) { waterWave.frame = 0; return; }
+  if (level === 0) {
+    waterWave.frame = 0;
+    return;
+  }
+
   const base = height * (1 - level / 100);
-  const tilt = still ? 0 : waterWave.angle * width * .040;
-  const amplitude = still ? 0 : Math.min(36, 4.2 + waterWave.energy * 15);
-  svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
-  const back = waveLine(width, base - 10, -tilt * .8, amplitude * .72, -waterWave.phase * .9, 1.5);
-  const front = waveLine(width, base, tilt, amplitude, waterWave.phase, 1.8);
-  svg.querySelector('.tank-wave-back').setAttribute('d', back + ' L' + width + ' ' + height + ' L0 ' + height + ' Z');
-  svg.querySelector('.tank-wave-front').setAttribute('d', front + ' L' + width + ' ' + height + ' L0 ' + height + ' Z');
+  const tilt = still ? 0 : waterWave.angle * width * 0.06;
+  const amplitude = still ? 0 : Math.min(42, 6 + waterWave.energy * 20);
+
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+  const back = waveLine(width, base - 16, -tilt * 0.72, amplitude * 0.72, -waterWave.phase * 0.9, 1.55, 4);
+  const front = waveLine(width, base, tilt, amplitude, waterWave.phase, 1.9, 4);
+
+  svg.querySelector('.tank-wave-back').setAttribute('d', `${back} L${width} ${height} L0 ${height} Z`);
+  svg.querySelector('.tank-wave-front').setAttribute('d', `${front} L${width} ${height} L0 ${height} Z`);
   svg.querySelector('.tank-wave-crest').setAttribute('d', front);
-  waterWave.frame = still ? 0 : requestAnimationFrame(drawWaterWave);
+
+  waterWave.frame = requestAnimationFrame(drawWaterWave);
 }
+
 function startWaterWaves() {
   if (waterWave.frame) cancelAnimationFrame(waterWave.frame);
   waterWave.frame = 0;
-  if (app.querySelector('.hero-tank')) waterWave.frame = requestAnimationFrame(drawWaterWave);
+  if (app.querySelector('.hero-tank')) {
+    waterWave.frame = requestAnimationFrame(drawWaterWave);
+  }
 }
+
 function applyWaterMotion(x) {
   if (reducedMotion()) return;
-  const next = Math.max(-1, Math.min(1, x)) * -11;
-  waterWave.energy = Math.min(3.5, waterWave.energy + Math.abs(next - waterWave.target) * .26);
+
+  const next = Math.max(-1, Math.min(1, x)) * -15;
+  waterWave.energy = Math.min(4.2, waterWave.energy + Math.abs(next - waterWave.target) * 0.32);
   waterWave.target = next;
+
   const tank = app.querySelector('.hero-tank');
   if (tank) tank.style.setProperty('--tank-angle', next.toFixed(2) + 'deg');
 }
@@ -876,33 +1086,22 @@ function handleOrientation(event) {
   const x = Math.max(-1, Math.min(1, (event.gamma - orientationBase.gamma) / 14));
   applyWaterMotion(x);
 }
-async function toggleTilt() {
-  if (tiltEnabled) {
+async function toggleTilt(forceOn = true) {
+  if (!window.isSecureContext || typeof DeviceOrientationEvent === 'undefined') {
     tiltEnabled = false;
-    orientationBase = null;
-    window.removeEventListener('deviceorientation', handleOrientation);
-    applyWaterMotion(0);
-    tiltMessage = 'Tilt is off. Touch or move over the water to make it respond.';
-  } else if (!window.isSecureContext) {
-    tiltMessage = 'Tilt needs HTTPS on this phone.';
-  } else if (typeof DeviceOrientationEvent === 'undefined') {
-    tiltMessage = 'This browser has no orientation sensor available.';
-  } else {
-    try {
-      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-        const result = await DeviceOrientationEvent.requestPermission();
-        if (result !== 'granted') throw new Error('Permission not granted');
-      }
-      orientationBase = null;
-      tiltEnabled = true;
-      tiltMessage = 'Tilt enabled. Move the phone gently to shift the water.';
-      window.addEventListener('deviceorientation', handleOrientation, { passive: true });
-    } catch {
-      tiltMessage = 'Motion access was not granted. Touch interaction still works.';
-    }
+    return;
   }
-  renderShell();
-  app.querySelector('[data-tilt]')?.focus({ preventScroll: true });
+
+  try {
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      const permission = await DeviceOrientationEvent.requestPermission();
+      tiltEnabled = permission === 'granted';
+    } else {
+      tiltEnabled = forceOn;
+    }
+  } catch {
+    tiltEnabled = false;
+  }
 }
 function setPage(page) {
   if (!NAV.some(item => item.id === page)) return;
@@ -969,7 +1168,6 @@ function saveProfile(form) {
   app.querySelector('#profile-form [type="submit"]')?.focus({ preventScroll: true });
 }
 app.addEventListener("click", event => {
-  if (event.target.closest('[data-tilt]')) { toggleTilt(); return; }
   if (event.target.closest('.usage-history > summary')) { usageHistoryOpen = !usageHistoryOpen; return; }
   if (event.target.closest('.map-environment > summary')) { environmentPanelOpen = !environmentPanelOpen; return; }
   const loadSample = event.target.closest("[data-load-sample]");
