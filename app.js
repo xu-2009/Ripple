@@ -836,6 +836,20 @@ function renderRipple() {
         <h2>${esc(item.title)}</h2><p>${esc(item.text)}</p>
       </article>`).join('')}
     </section>
+    <aside class="card ripple-fact" aria-label="Did you know">
+      <span class="ripple-fact-symbol" aria-hidden="true">✦</span>
+      <div class="ripple-fact-body">
+        <p class="ripple-fact-label">Did you know?</p>
+        ${isWater ? `
+          <p><strong>2,700 gallons a year.</strong> That's how much water the EPA estimates an average family could save by installing WaterSense-labeled showerheads.</p>
+          <a href="https://www.epa.gov/watersense/showerheads" target="_blank" rel="noopener noreferrer">Source: EPA WaterSense</a>
+        ` : `
+          <p><strong>2.4 kWh in 30 days.</strong> That's what a device drawing 10 watts on standby uses if left in that mode for eight hours each day.</p>
+          <a href="https://www.energy.gov/cmei/femp/measuring-standby-power" target="_blank" rel="noopener noreferrer">Standby-power guide: U.S. Department of Energy</a>
+          <span class="ripple-fact-note">Illustrative calculation; actual device power varies.</span>
+        `}
+      </div>
+    </aside>
     <section class="card ripple-simulator impact-panel">
       <h2>${isWater ? 'Water savings calculator' : 'Electricity savings calculator'}</h2>
       <p class="muted">${isWater ? 'See how a shorter shower could change water usage.' : 'Estimate the electricity saved by unplugging standby devices.'}</p>
