@@ -18,6 +18,7 @@ const ACTION_CATALOG = [
   { id: "hidden-leaks", title: "Look for hidden leaks", problem: "A running toilet or dripping faucet can go unnoticed.", action: "Check fixtures and your meter when nobody is intentionally using water.", why: "Repairing a leak stops water from flowing when it is not needed. Compare later bills to see any measured change." },
   { id: "full-laundry", title: "Run full laundry loads", problem: "Many small loads can use more water and energy per item.", action: "Combine laundry where the care labels allow it.", why: "A fuller load makes better use of each wash cycle. Savings vary by machine and cycle." },
   { id: "outdoor-watering", title: "Inspect outdoor watering", problem: "Broken heads and overspray can waste water in Utah's dry climate.", action: "Watch each sprinkler zone run and repair leaks or water reaching pavement.", why: "Water that reaches the plants instead of pavement can support the landscape with less waste." },
+  { id: "pet-care", title: "Water-wise pet care", problem: "Pet care uses some household water.", action: "Turn off the tap while scrubbing pet bowls or bathing pets; rinse when needed.", why: "Avoid leaving the tap running between rinses." },
   { id: "idle-power", title: "Check idle electricity use", problem: "Devices can draw electricity while nobody is using them.", action: "Find devices that can be switched off or unplugged between uses.", why: "Fewer hours drawing power can lower future measured kWh. The result depends on each device." }
   ,{ id: "efficient-fixtures", title: "Choose a more efficient fixture", problem: "Older showerheads or faucets may use more water for the same task.", action: "Compare measured flow with a suitable WaterSense-labeled replacement before buying.", why: "A lower flow rate can reduce water use while the fixture runs. Keep duration and comfort in mind; longer use can offset savings." }
 ];
@@ -75,7 +76,7 @@ const DEFAULT_STATE = {
   challengeRuns: [],
   conservationGoals: [],
   reduceMotion: false,
-  profile: { residents: 1, home: "apartment", city: "", lawn: false, irrigation: false, waterGoal: "", electricGoal: "", priority: "both" },
+  profile: { residents: 1, home: "apartment", city: "", pets: 0, lawn: false, irrigation: false, waterGoal: "", electricGoal: "", priority: "both" },
   entries: []
 };
 const app = document.getElementById("app");
@@ -136,6 +137,7 @@ function loadState(source) {
     if (typeof profile.city === "string") clean.profile.city = profile.city.trim().slice(0, 80);
     clean.profile.lawn = profile.lawn === true;
     clean.profile.irrigation = profile.irrigation === true;
+    if (Number.isInteger(profile.pets) && profile.pets >= 0 && profile.pets <= 20) clean.profile.pets = profile.pets;
     if (["water", "electricity", "both"].includes(profile.priority)) clean.profile.priority = profile.priority;
     for (const key of ["waterGoal", "electricGoal"]) {
       if (["string", "number"].includes(typeof profile[key]) && Number.isFinite(Number(profile[key])) && Number(profile[key]) >= 0.01 && Number(profile[key]) <= 1e11) clean.profile[key] = String(profile[key]);
@@ -267,13 +269,13 @@ function renderShell() {
         '" data-nav="' + item.id + '" aria-current="' + (state.page === item.id ? "page" : "false") +
         '">' + icon(item.icon) + '<span>' + item.label + '</span></button>'
       ).join("") + '</nav>' +
-      '<div class="sidebar-foot">Utah conservation, made clearer.<br><br>Ripples · 2026</div>' +
+      '<div class="sidebar-foot">Built for Utah households.<br><br>Ripples · 2026</div>' +
     '</aside><main class="content page-' + state.page + '">' +
       '<div class="topline"><span>RIPPLES · UTAH</span><span class="pill" id="storage-badge">' + esc(cloudUser ? cloudStatus : 'Local · saved in this browser') + '</span></div>' +
       (notice ? '<div class="notice" role="status">' + esc(notice) + '</div>' : "") +
       (hasFictionalSampleBills() ? '<div class="notice sample-data-notice" role="note"><strong>DEMO DATA</strong> · These bills are fictional. They are not actual household records.</div>' : '') +
       content +
-      '<p class="footer">Student-built in Utah. Bills are saved in this browser. County figures are fictional demonstrations; calculators show estimates, not verified savings.</p>' +
+      '<p class="footer">Built in Utah. Bills stay in this browser. County figures are fictional; calculator results are estimates.</p>' +
     '</main></div>';
   if (focusKey) app.querySelector('[' + focusKey + '="' + CSS.escape(focusValue) + '"]')?.focus({ preventScroll: true });
   startWaterWaves();
@@ -455,7 +457,7 @@ function renderChart(entries, type, annual = false) {
     [0, .5, 1].map(f => '<line x1="' + left + '" y1="' + y(max * f) + '" x2="' + (w - right) + '" y2="' + y(max * f) + '"/>').join("") +
     '<text x="0" y="' + (top + 4) + '">' + number(max, 0) + '</text><text x="0" y="' + (h - bottom + 4) + '">0</text>' +
     (state.chartStyle==='bar'?'':'<polyline points="' + pts + '"/>') + dots + labels + '</svg><p class="chart-tooltip fineprint" aria-live="polite">Select a point to inspect its value.</p>' +
-    '<p class="fineprint">Daily averages adjust for different billing periods. ' + unit(type) + ' to account for different billing period lengths.' +
+    '<p class="fineprint">Each point shows average ' + unit(type) + ' used per day, adjusting for billing period length.' +
     (annual ? " Annual groups include recorded bills only; missing months are not estimated." : "") +
     (pointsData.length === 1 ? " Add another bill to see a trend." : "") + '</p>' +
     '<details class="chart-values"><summary>View chart values</summary><table><caption>Recorded daily averages</caption><thead><tr><th scope="col">Period</th><th scope="col">' + unit(type) + '/day</th></tr></thead><tbody>' +
@@ -469,9 +471,9 @@ function renderComparison() {
     const delta = (perPerson / USGS_UTAH_DOMESTIC_GPCD_2015 - 1) * 100;
     const max = Math.max(perPerson, USGS_UTAH_DOMESTIC_GPCD_2015, 1);
     return '<div class="stat-value ' + (delta <= 0 ? "good" : "warm") + '">' + (delta > 0 ? "+" : "") + number(delta, 1) + '%</div>' +
-      '<p class="muted">Your household’s billed gallons per person per day versus an older Utah residential reference.</p>' +
+      '<p class="muted">Water billed per person per day versus a historical Utah reference.</p>' +
       '<div class="compare-bars">' + bar("Your bill", perPerson, max, false, "gal/person/day") + bar("Utah 2015", USGS_UTAH_DOMESTIC_GPCD_2015, max, true, "gal/person/day") + '</div>' +
-      '<p class="source">Your ' + latest.days + '-day bill is divided by ' + state.profile.residents + ' household ' + (state.profile.residents === 1 ? 'resident' : 'residents') + '. <a href="' + USGS_DOMESTIC_SOURCE + '" target="_blank" rel="noopener noreferrer">USGS Circular 1441, Table 6 ↗</a> estimates <strong>169 gal/person/day for Utah in 2015</strong> from public-supply deliveries to domestic users, including indoor and outdoor use. It is not a current monthly, city, housing-type, lawn, or season-matched average. Separate irrigation meters, self-supplied water, and the age of the reference limit comparison.</p>';
+      '<p class="source">Your ' + latest.days + '-day bill is divided by ' + state.profile.residents + ' household ' + (state.profile.residents === 1 ? 'resident' : 'residents') + '. <a href="' + USGS_DOMESTIC_SOURCE + '" target="_blank" rel="noopener noreferrer">USGS Circular 1441, Table 6 ↗</a> estimates <strong>169 gal/person/day for Utah in 2015</strong> from public-supply deliveries to domestic users, including indoor and outdoor use. It is not a current monthly, city, housing-type, lawn, or season-matched average. Water used for pets is already in your bill, but pets are not counted as residents. Other limitations include separate irrigation meters and the age of the reference.</p>';
   }
   if (!latest) return '<div class="empty">Enter one electricity bill to compare with a sourced Utah reference.</div>';
   const normalized = monthlyEquivalent(latest);
@@ -508,8 +510,8 @@ function renderUsage() {
   const entry = state.entries.find(e => e.id === editingId);
   const entries = resourceEntries().slice().reverse();
   const introIcon = type === 'water' ? '💧' : '⚡';
-  return pageIntro('', 'My Usage', 'Add bills, then see how your usage changes.') +
-    '<div class="section-spotlight usage-spotlight"><span class="spotlight-icon">' + introIcon + '</span><div><strong>' + (type === 'water' ? 'Water tracking' : 'Electricity tracking') + '</strong><small>Your numbers. Your trends.</small></div>' + resourceSwitch() + '</div>' +
+  return pageIntro('', 'My Usage', 'Your bills and usage trends.') +
+    '<div class="section-spotlight usage-spotlight"><span class="spotlight-icon">' + introIcon + '</span><div><strong>' + (type === 'water' ? 'Water tracking' : 'Electricity tracking') + '</strong><small>Recorded from your bills.</small></div>' + resourceSwitch() + '</div>' +
     (state.entries.length === 0 ? '<section class="card sample-data-card"><h3>Try it with sample bills</h3><p>Load fictional 2025 bills to preview trends. You can delete them later.</p><button class="button secondary" type="button" data-load-sample>Load sample bills</button></section>' : '') +
     '<div class="usage-layout"><section class="card usage-entry-card"><h2>' + (entry ? 'Edit bill' : 'Add a bill') + '</h2>' +
       '<form id="entry-form"><div class="form-grid">' +
@@ -523,7 +525,7 @@ function renderUsage() {
       '</div><div class="form-actions"><button class="button primary" type="submit">' + (entry ? 'Save changes' : 'Save bill') + '</button>' +
       (entry ? '<button class="button secondary" type="button" data-cancel-edit>Cancel</button>' : '') +
       '</div></form></section>' +
-    '<section class="card usage-chart"><h2>Your trend</h2>' + renderChart(resourceEntries(), type) + '</section></div>' +
+    '<section class="card usage-chart"><h2>Usage over time</h2>' + renderChart(resourceEntries(), type) + '</section></div>' +
     '<div class="utility-details-row"><details class="card usage-history"' + (usageHistoryOpen ? ' open' : '') + '><summary>Bill history (' + entries.length + ')</summary>' +
       (entries.length ? entries.map(e => '<div class="record"><div><strong>' + esc(monthLabel(e.month)) + ' · ' + number(e.quantity, 2) + ' ' + esc(e.unit) +
         '</strong><span>' + e.days + ' billing days</span></div><div class="record-actions"><button class="button small secondary" data-edit="' + esc(e.id) + '">Edit</button>' +
@@ -550,16 +552,30 @@ function renderProfile() {
     { value: 'electricity', icon: '⚡', label: 'Electricity' },
     { value: 'both', icon: '🌎', label: 'Both' }
   ];
-  return pageIntro('', 'Profile', 'Set up your household.') + `
+  return pageIntro('', 'Profile', 'A little context makes comparisons more useful.') + `
     <section class="card profile-visual-card">
       <form id="profile-form">
-        <h2>Household size</h2>
-        <div class="residents-picker">
-          <span class="residents-graphic" aria-hidden="true">👥</span>
-          <button type="button" class="residents-step" data-residents-step="-1" aria-label="Remove one person">−</button>
-          <input name="residents" aria-label="People in household" type="number" min="1" max="30" step="1" required value="${esc(p.residents)}">
-          <button type="button" class="residents-step" data-residents-step="1" aria-label="Add one person">+</button>
+        <div class="household-count-grid">
+          <section class="household-count-section">
+            <h2>People</h2>
+            <div class="residents-picker">
+              <span class="residents-graphic" aria-hidden="true">👥</span>
+              <button type="button" class="residents-step" data-residents-step="-1" aria-label="Remove one person">−</button>
+              <input name="residents" aria-label="People in household" type="number" min="1" max="30" step="1" required value="${esc(p.residents)}">
+              <button type="button" class="residents-step" data-residents-step="1" aria-label="Add one person">+</button>
+            </div>
+          </section>
+          <section class="household-count-section">
+            <h2>Pets</h2>
+            <div class="residents-picker pet-picker">
+              <span class="residents-graphic" aria-hidden="true">🐾</span>
+              <button type="button" class="residents-step" data-pets-step="-1" aria-label="Remove one pet">−</button>
+              <input name="pets" aria-label="Pets in household" type="number" min="0" max="20" step="1" required value="${esc(p.pets ?? 0)}">
+              <button type="button" class="residents-step" data-pets-step="1" aria-label="Add one pet">+</button>
+            </div>
+          </section>
         </div>
+        <p class="pet-context">Water used for pets is already included in your bill. Utah's per-person reference counts human residents only.</p>
         <h2 class="profile-question">Home type</h2>
         <input type="hidden" name="home" value="${esc(p.home)}">
         <div class="home-choice-grid" role="group" aria-label="Home type">
@@ -619,20 +635,21 @@ function renderMap() {
     counties.find(c => c.name === 'Salt Lake') || counties[0];
   const selectedName = selectedCounty?.name || 'Salt Lake';
   const resource = state.resource;
+  const hasResourceBills = resourceEntries(resource).length > 0;
   const isWater = resource === 'water';
   const unitLabel = isWater ? 'gal / person / day' : 'kWh / account / day';
-  const selectedValue = selectedCounty ? demoCountyUsage(selectedCounty, resource) : null;
-  const ranked = counties.map(county => ({name: county.name, value: demoCountyUsage(county, resource)}))
-    .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name));
+  const selectedValue = selectedCounty && hasResourceBills ? demoCountyUsage(selectedCounty, resource) : null;
+  const ranked = hasResourceBills ? counties.map(county => ({name: county.name, value: demoCountyUsage(county, resource)}))
+    .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name)) : [];
 
   const mapSvg = counties.length ? `
     <svg class="utah-map" viewBox="0 0 380 510" role="group" aria-label="Select a Utah county on the fictional sample ${resource} map">
       ${counties.map(county => {
         const value = demoCountyUsage(county, resource);
         return `<path class="county ${county.name === selectedName ? 'active' : ''}"
-          d="${county.path}" style="--county-fill:${usageDemoColor(value, resource)}"
+          d="${county.path}" style="--county-fill:${hasResourceBills ? usageDemoColor(value, resource) : '#d7e5e8'}"
           data-region="${esc(county.name)}" role="button" tabindex="0"
-          aria-label="${esc(county.name)} County, fictional usage ${number(value, 1)} ${unitLabel}"
+          aria-label="${esc(county.name)} County${hasResourceBills ? ', fictional example usage ' + number(value, 1) + ' ' + unitLabel : ', no usage recorded'}"
           aria-pressed="${county.name === selectedName}">
           <title>${esc(county.name)} County</title>
         </path>`;
@@ -644,28 +661,31 @@ function renderMap() {
       <span class="map-hero-title">Utah's 29 counties</span>
       ${resourceSwitch()}
     </div>
-    <p class="map-demo-label"><strong>Fictional sample data.</strong> Colors and rankings demonstrate a comparison, not measured Utah county consumption.</p>
+    <p class="map-demo-label">${hasResourceBills
+      ? '<strong>Sample map only.</strong> County shades and rankings are fictional, not actual Utah usage or a calculation from your bills.'
+      : '<strong>No ' + resource + ' bills yet.</strong> The map is neutral until you add a bill. County sample values remain fictional.'}</p>
     <section class="map-layout">
       <div class="map-main-card">
-        <div class="map-canvas">${mapSvg}</div>
-        <div class="map-legend" aria-label="Fictional usage color scale">
+        <div class="map-canvas ${hasResourceBills ? 'has-map-data' : 'map-is-empty'}">${mapSvg}</div>
+        ${hasResourceBills ? `<div class="map-legend" aria-label="Fictional usage color scale">
           <div class="legend-bar ${isWater ? 'water' : 'electricity'}"></div>
-          <div class="legend-labels"><span>Lighter · lower use</span><span>Darker · higher use</span></div>
-        </div>
+          <div class="legend-labels"><span>Lighter · lower example use</span><span>Darker · higher example use</span></div>
+        </div>` : `<div class="map-empty-prompt"><span>Map preview</span><p>Add a ${resource} bill to see the sample comparison.</p>
+          <button type="button" class="button secondary small" data-nav="usage">Add a bill</button></div>`}
       </div>
       <aside class="card map-side-panel">
         <section class="map-selected-block" aria-live="polite">
           <span class="map-side-label">SELECTED COUNTY</span>
           <h2 data-selected-county>${esc(selectedName)} County</h2>
           <div class="map-selected-stat" data-selected-value>${selectedValue === null ? '—' : number(selectedValue, 1)}</div>
-          <p class="map-selected-unit">${unitLabel} · fictional example</p>
+          <p class="map-selected-unit">${hasResourceBills ? unitLabel + ' · fictional example' : 'No usage recorded for this resource'}</p>
           <label class="field map-select-label"><span>Choose a county</span>
             <select data-county-select ${!counties.length ? 'disabled' : ''}>
               ${counties.map(c => `<option value="${esc(c.name)}" ${selectedOption(c.name, selectedName)}>${esc(c.name)} County</option>`).join('')}
             </select>
           </label>
         </section>
-        <section class="map-ranking-block" aria-label="All county rankings, fictional data">
+        ${hasResourceBills ? `<section class="map-ranking-block" aria-label="All county rankings, fictional data">
           <div class="map-ranking-head"><h3>County ranking</h3><span>${unitLabel}</span></div>
           <ol class="county-ranking-list">
             ${ranked.map((county, index) => `<li>
@@ -678,7 +698,9 @@ function renderMap() {
               </button>
             </li>`).join('')}
           </ol>
-        </section>
+        </section>` : `<section class="map-ranking-empty">
+          <h3>County ranking</h3><p>No ranking yet. The sample county leaderboard appears after you add a ${resource} bill.</p>
+        </section>`}
       </aside>
     </section>
     <details class="card map-sources"><summary>Map data & methodology</summary>
@@ -700,7 +722,7 @@ function selectMapCounty(name) {
   const value = app.querySelector('[data-selected-value]');
   const dropdown = app.querySelector('[data-county-select]');
   if (title) title.textContent = chosen.name + ' County';
-  if (value) value.textContent = number(demoCountyUsage(chosen, state.resource), 1);
+  if (value) value.textContent = resourceEntries(state.resource).length ? number(demoCountyUsage(chosen, state.resource), 1) : '—';
   if (dropdown) dropdown.value = chosen.name;
 
   app.querySelectorAll('svg.utah-map [data-region]').forEach(path => {
@@ -803,11 +825,11 @@ function renderRipple() {
     {title:'Your home', text:'Turning off unused devices can make bills easier to manage.'},
     {title:'Everyday habits', text:'Tracking your changes helps you identify what works.'}
   ];
-  const tipIds = isWater ? ['shorter-showers', 'hidden-leaks', 'outdoor-watering']
+  const tipIds = isWater ? ['shorter-showers', 'hidden-leaks', state.profile.pets > 0 ? 'pet-care' : 'outdoor-watering']
     : ['idle-power', 'full-laundry'];
   const tips = tipIds.map(id => ACTION_CATALOG.find(action => action.id === id)).filter(Boolean);
 
-  return pageIntro('', 'Your Impact', 'Where using less can make a difference.') + `
+  return pageIntro('', 'Your Impact', 'Small changes, practical effects.') + `
     <div class="save-page-header">${resourceSwitch()}</div>
     <section class="impact-top-grid">
       ${destinations.map(item => `<article class="card impact-card">
@@ -1139,7 +1161,8 @@ function saveProfile(form) {
   const residents = Number(data.get("residents"));
   const waterGoal = String(data.get("waterGoal") || "");
   const electricGoal = String(data.get("electricGoal") || "");
-  if (!Number.isInteger(residents) || residents < 1 || residents > 30 ||
+  const pets = Number(data.get("pets"));
+  if (!Number.isInteger(pets) || pets < 0 || pets > 20 || !Number.isInteger(residents) || residents < 1 || residents > 30 ||
       (waterGoal && (!Number.isFinite(Number(waterGoal)) || Number(waterGoal) < 0.01 || Number(waterGoal) > 1e11)) ||
       (electricGoal && (!Number.isFinite(Number(electricGoal)) || Number(electricGoal) < 0.01 || Number(electricGoal) > 1e11))) {
     showValidationNotice("Please check your household size and goals.");
@@ -1147,6 +1170,7 @@ function saveProfile(form) {
   }
   state.profile = {
     residents,
+    pets,
     home: ["house", "apartment", "townhome"].includes(data.get("home")) ? data.get("home") : "apartment",
     city: String(data.get("city") || "").trim().slice(0, 80),
     lawn: data.has("lawn"),
@@ -1179,6 +1203,12 @@ app.addEventListener("click", event => {
   if (householdStep) {
     const input = app.querySelector('#profile-form [name="residents"]');
     if (input) input.value = Math.max(1, Math.min(30, (Number(input.value) || 1) + Number(householdStep.dataset.residentsStep)));
+    return;
+  }
+  const petStep = event.target.closest('[data-pets-step]');
+  if (petStep) {
+    const input = app.querySelector('#profile-form [name="pets"]');
+    if (input) input.value = Math.max(0, Math.min(20, (Number(input.value) || 0) + Number(petStep.dataset.petsStep)));
     return;
   }
   const homeChoice = event.target.closest('[data-home-choice]');
