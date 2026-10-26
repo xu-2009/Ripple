@@ -822,3 +822,54 @@ h1, h2, h3, .brand, .stat-value, .home-water-number, .home-stat-number, .map-sel
 .map-ranking-empty h3 { color:var(--ink); }
 .map-ranking-empty p { font-size:13px; }
 @media(max-width:640px){ .household-count-grid { grid-template-columns:1fr; gap:8px; } }
+
+/* Compact, sourced fact on Your Impact: one per selected resource. */
+.page-ripple .ripple-fact {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  margin: 18px 0;
+  padding: 19px 22px;
+  background: linear-gradient(112deg, #e4f5f1 0%, #f5fcfa 100%);
+  border: 1px solid rgba(23, 113, 115, .13);
+  box-shadow: 0 7px 24px rgba(7, 60, 79, .04);
+}
+.page-ripple .ripple-fact-symbol {
+  display: grid;
+  place-items: center;
+  flex: 0 0 39px;
+  height: 39px;
+  border-radius: 13px;
+  color: #087f8c;
+  background: rgba(8, 127, 140, .11);
+  font-size: 22px;
+}
+.page-ripple .ripple-fact-label {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #0b5a67;
+  letter-spacing: 0;
+}
+.page-ripple .ripple-fact-body p:not(.ripple-fact-label) {
+  margin: 0 0 5px;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.page-ripple .ripple-fact-body strong { color: #075968; }
+.page-ripple .ripple-fact-body a {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+}
+.page-ripple .ripple-fact-note {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+}
+@media (max-width: 560px) {
+  .page-ripple .ripple-fact { padding: 15px; gap: 11px; }
+  .page-ripple .ripple-fact-symbol { flex-basis: 33px; height: 33px; font-size: 18px; }
+}
