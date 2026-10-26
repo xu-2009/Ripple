@@ -287,7 +287,7 @@ small, .muted { color: var(--muted); }
 
 @media (max-width: 360px) { .card-head { flex-wrap: wrap; } }
 
-/* Final CAC UI cleanup — scoped additions only. */
+/* Final CAC UI cleanup â€” scoped additions only. */
 .home-summary { margin-top: 24px; }
 .home-summary .card-head { align-items: center; }
 .home-summary .card-head h2 { margin: 0; }
@@ -746,4 +746,50 @@ small, .muted { color: var(--muted); }
   .page-profile .profile-extra-fields { grid-template-columns:1fr; }
   .page-profile .home-choice-grid { gap:8px; }
   .page-profile .home-choice { padding:12px 6px; font-size:11px; min-height:93px; }
+}
+
+/* Home tank: an actual usage level instead of the old decorative 50% fill. */
+.page-home .tank-reading {
+  position: absolute;
+  top: 32px;
+  right: 34px;
+  z-index: 4;
+  width: min(185px, 31%);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  gap: 3px;
+  color: #efffff;
+  border: 1px solid rgba(219, 255, 255, .32);
+  border-radius: 17px;
+  background: rgba(4, 47, 63, .46);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+.page-home .tank-reading-title {
+  font-size: 9px;
+  letter-spacing: .15em;
+  font-weight: 700;
+  color: rgba(226, 255, 255, .86);
+}
+.page-home .tank-reading-percent {
+  font: 650 clamp(24px, 3vw, 38px)/1.06 Outfit, system-ui, sans-serif;
+  letter-spacing: -.03em;
+}
+.page-home .tank-reading-caption {
+  color: rgba(233, 255, 255, .88);
+  font-size: 10px;
+  line-height: 1.4;
+}
+@media (max-width: 600px) {
+  .page-home .tank-reading {
+    top: 20px;
+    right: 16px;
+    width: 135px;
+    padding: 10px 12px;
+  }
+  .page-home .tank-reading-percent { font-size: 25px; }
+  .page-home .tank-reading-caption { font-size: 9px; }
 }
