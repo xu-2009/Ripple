@@ -298,103 +298,95 @@ function renderHome() {
   const water = latestAndPrevious('water');
   const electricity = latestAndPrevious('electricity');
   const waterChange = dailyChange(water.latest, water.previous);
-  const electricityChange = dailyChange(electricity.latest, electricity.previous);
+  const electricChange = dailyChange(electricity.latest, electricity.previous);
 
-  // Compare daily averages and scale the difference to the latest billing period.
-  // This measures a change in usage, not proven conservation savings.
-  const difference = (pair) => pair.latest && pair.previous
+  // Usage differences account for billing-period length. They do not prove
+  // conservation savings; season, occupancy and weather may also change.
+  const usageDifference = pair => pair.latest && pair.previous
     ? (daily(pair.previous) - daily(pair.latest)) * pair.latest.days
     : null;
-  const waterDifference = difference(water);
-  const electricityDifference = difference(electricity);
-
+  const waterDifference = usageDifference(water);
+  const electricityDifference = usageDifference(electricity);
   const waterGoal = Number(state.profile.waterGoal);
   const tankLevel = water.latest && waterGoal > 0
     ? Math.max(10, Math.min(90, monthlyEquivalent(water.latest) / waterGoal * 100))
-    : 50; // Preview display; not measured storage.
+    : 50; // Preview animation if the user has not set a monthly goal.
 
-  const comparisonText = (value, unitLabel) => {
-    if (value === null) return 'Add two bills to compare';
-    if (Math.abs(value) < 0.01) return 'No change';
-    return number(Math.abs(value), unitLabel === 'gal' ? 0 : 1) + ' ' + unitLabel +
-      (value > 0 ? ' less than last bill' : ' more than last bill');
-  };
-  const waterChangeText = waterChange === null
-    ? 'Add two water bills to see your trend'
+  const waterHeadline = waterDifference === null ? 'Your water, at a glance'
+    : waterDifference > 0 ? number(waterDifference, 0) + ' gal less'
+    : waterDifference < 0 ? number(Math.abs(waterDifference), 0) + ' gal more'
+    : 'No change';
+  const waterSubhead = waterChange === null
+    ? 'Add two water bills to compare monthly usage.'
     : number(Math.abs(waterChange), 1) + '% ' +
       (waterChange < 0 ? 'lower' : waterChange > 0 ? 'higher' : 'unchanged') +
-      ' daily use vs. the previous bill';
-  const tankCaption = water.latest && waterGoal > 0
-    ? 'Water use is ' + number(monthlyEquivalent(water.latest) / waterGoal * 100, 0) + '% of your monthly goal'
-    : 'Water display is illustrative, not a stored-water measurement';
+      ' daily usage than your previous bill';
+  const goalText = water.latest && waterGoal > 0
+    ? number(monthlyEquivalent(water.latest), 0) + ' gal monthly equivalent · ' +
+      number(monthlyEquivalent(water.latest) / waterGoal * 100, 0) + '% of your goal'
+    : 'Water display is illustrative, not a storage measurement';
+
+  const electricSub = electricChange === null
+    ? 'Add two bills to compare'
+    : number(Math.abs(electricChange), 1) + '% ' +
+      (electricChange < 0 ? 'lower' : electricChange > 0 ? 'higher' : 'unchanged') +
+      ' daily use';
 
   return `
-    <section class="card hero home-hero hero-flow-demo">
+    <section class="card hero home-hero hero-flow-demo full-tank-hero">
       <div class="hero-tank-shell" aria-hidden="true">
         <div class="hero-tank" style="--tank-level:${tankLevel.toFixed(1)}%">
-          <svg class="hero-tank-water" viewBox="0 0 600 420" role="presentation" aria-hidden="true">
+          <svg class="hero-tank-water" viewBox="0 0 600 420" preserveAspectRatio="none" role="presentation" aria-hidden="true">
             <defs>
-              <clipPath id="tank-clip"><rect x="20" y="15" width="560" height="390" rx="32" /></clipPath>
+              <clipPath id="tank-clip"><rect x="8" y="8" width="584" height="404" rx="24"/></clipPath>
               <linearGradient id="tank-water-fill" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stop-color="#83e5f0" />
-                <stop offset="30%" stop-color="#34bad3" />
-                <stop offset="100%" stop-color="#05516b" />
+                <stop offset="0%" stop-color="#82e5f0"/>
+                <stop offset="35%" stop-color="#34b7cd"/>
+                <stop offset="100%" stop-color="#09516d"/>
               </linearGradient>
               <linearGradient id="tank-glass-fill" x1="0" x2="1" y1="0" y2="0">
-                <stop offset="0%" stop-color="#d6ffff" stop-opacity=".25" />
-                <stop offset="17%" stop-color="#ffffff" stop-opacity=".04" />
-                <stop offset="83%" stop-color="#ffffff" stop-opacity=".04" />
-                <stop offset="100%" stop-color="#ddffff" stop-opacity=".26" />
-              </linearGradient>
-              <linearGradient id="tank-edge" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#fff" stop-opacity=".7" />
-                <stop offset="100%" stop-color="#8ed6dd" stop-opacity=".6" />
+                <stop offset="0%" stop-color="#fff" stop-opacity=".17"/>
+                <stop offset="12%" stop-color="#fff" stop-opacity=".01"/>
+                <stop offset="88%" stop-color="#fff" stop-opacity=".01"/>
+                <stop offset="100%" stop-color="#defaff" stop-opacity=".18"/>
               </linearGradient>
             </defs>
-            <rect x="20" y="15" width="560" height="390" rx="32" fill="#c0eff1" fill-opacity=".11" />
+            <rect x="8" y="8" width="584" height="404" rx="24" fill="#afeff2" fill-opacity=".09"/>
             <g clip-path="url(#tank-clip)">
               <path class="tank-water-body" fill="url(#tank-water-fill)"></path>
-              <path class="tank-wave-crest" fill="none" stroke="#d8ffff" stroke-opacity=".9" stroke-width="3.6"></path>
-              <path class="tank-underwater-glow" fill="none" stroke="#7deafa" stroke-opacity=".18" stroke-width="16"></path>
+              <path class="tank-wave-crest" fill="none" stroke="#ddffff" stroke-opacity=".83" stroke-width="2.6"></path>
+              <path class="tank-underwater-glow" fill="none" stroke="#b7fcff" stroke-opacity=".15" stroke-width="14"></path>
             </g>
-            <rect x="20" y="15" width="560" height="390" rx="32" fill="url(#tank-glass-fill)" stroke="url(#tank-edge)" stroke-width="3" />
-            <path d="M43 52 L43 340" stroke="white" stroke-opacity=".2" stroke-width="7" stroke-linecap="round" />
-            <path d="M552 52 L552 340" stroke="white" stroke-opacity=".11" stroke-width="5" stroke-linecap="round" />
+            <rect x="8" y="8" width="584" height="404" rx="24" fill="url(#tank-glass-fill)" stroke="#c9fdff" stroke-opacity=".34" stroke-width="2"/>
           </svg>
         </div>
       </div>
-      <div class="hero-copy">
-        <div class="home-kicker">YOUR WATER</div>
-        <h1>See the difference.</h1>
-        <p>Track water and electricity use at home.</p>
-        <div class="home-water-number">${waterDifference === null ? '—' :
-          (waterDifference >= 0 ? number(Math.max(0, waterDifference), 0) + ' gal less' :
-          number(Math.abs(waterDifference), 0) + ' gal more')}</div>
-        <div class="home-water-detail">${waterChangeText}</div>
+      <div class="hero-overlay-copy">
+        <span class="home-kicker">RIPPLES · WATER & ELECTRICITY</span>
+        <h1>${esc(waterHeadline)}</h1>
+        <p class="hero-overlay-sub">${esc(waterSubhead)}</p>
+        <p class="home-goal-line">${esc(goalText)}</p>
         <div class="button-row">
-          <button class="button primary" type="button" data-nav="usage">Add a bill</button>
-          <button class="button secondary" type="button" data-nav="map">Explore Utah</button>
+          <button type="button" class="button primary" data-nav="usage">Add a bill</button>
+          <button type="button" class="button secondary" data-nav="map">Explore Utah</button>
         </div>
-        <p class="home-tank-disclaimer">${esc(tankCaption)}</p>
       </div>
     </section>
     <section class="home-stat-row" aria-label="Latest household usage">
-      <article class="card home-stat">
-        <div class="home-stat-icon" aria-hidden="true">💧</div>
-        <div><span class="stat-label">Water · latest bill</span>
-          <div class="home-stat-number">${water.latest ? number(water.latest.amount, 0) + ' gal' : 'No data yet'}</div>
+      <article class="card home-stat"><div class="home-stat-icon" aria-hidden="true">💧</div>
+        <div><span class="stat-label">Latest water bill</span>
+          <div class="home-stat-number">${water.latest ? number(water.latest.amount, 0) + ' gal' : 'No data'}</div>
           <p class="stat-note">${esc(water.latest ? monthLabel(water.latest.month) : 'Add your first water bill')}</p>
         </div>
       </article>
-      <article class="card home-stat">
-        <div class="home-stat-icon" aria-hidden="true">⚡</div>
-        <div><span class="stat-label">Electricity · latest bill</span>
-          <div class="home-stat-number">${electricity.latest ? number(electricity.latest.amount, 0) + ' kWh' : 'No data yet'}</div>
-          <p class="stat-note">${esc(comparisonText(electricityDifference, 'kWh'))}</p>
+      <article class="card home-stat"><div class="home-stat-icon" aria-hidden="true">⚡</div>
+        <div><span class="stat-label">Latest electricity bill</span>
+          <div class="home-stat-number">${electricity.latest ? number(electricity.latest.amount, 0) + ' kWh' : 'No data'}</div>
+          <p class="stat-note">${esc(electricity.latest ? electricSub : 'Add your first electricity bill')}</p>
         </div>
       </article>
     </section>
-    <p class="home-comparison-note">Differences compare daily usage across billing periods. Weather, season, and occupancy can also change bills, so a decrease isn't proof of water or electricity saved.</p>
+    <p class="home-comparison-note">Bill comparisons use daily averages. Changes in weather and household size can affect the result.</p>
   `;
 }
 
@@ -600,56 +592,102 @@ function renderMap() {
   const selectedCounty = counties.find(c => c.name === state.region) ||
     counties.find(c => c.name === 'Salt Lake') || counties[0];
   const selectedName = selectedCounty?.name || 'Salt Lake';
-  const type = state.resource;
-  const waterMode = type === 'water';
-  const unitLabel = waterMode ? 'gal / person / day' : 'kWh / account / day';
-  const selectedValue = selectedCounty ? demoCountyUsage(selectedCounty, type) : null;
+  const resource = state.resource;
+  const isWater = resource === 'water';
+  const unitLabel = isWater ? 'gal / person / day' : 'kWh / account / day';
+  const selectedValue = selectedCounty ? demoCountyUsage(selectedCounty, resource) : null;
+  const ranked = counties.map(county => ({name: county.name, value: demoCountyUsage(county, resource)}))
+    .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name));
 
   const mapSvg = counties.length ? `
-    <svg class="utah-map" viewBox="0 0 380 510" role="group" aria-label="Utah county map with fictional sample ${type} usage">
-      ${counties.map(c => {
-        const value = demoCountyUsage(c, type);
-        return `<path class="county ${c.name === selectedName ? 'active' : ''}"
-          d="${c.path}" style="--county-fill:${usageDemoColor(value, type)}"
-          data-region="${esc(c.name)}" role="button" tabindex="0"
-          aria-label="${esc(c.name)} County, fictional sample use ${number(value, 1)} ${unitLabel}"
-          aria-pressed="${c.name === selectedName}">
-          <title>${esc(c.name)} County · fictional ${number(value, 1)} ${unitLabel}</title>
+    <svg class="utah-map" viewBox="0 0 380 510" role="group" aria-label="Select a Utah county on the fictional sample ${resource} map">
+      ${counties.map(county => {
+        const value = demoCountyUsage(county, resource);
+        return `<path class="county ${county.name === selectedName ? 'active' : ''}"
+          d="${county.path}" style="--county-fill:${usageDemoColor(value, resource)}"
+          data-region="${esc(county.name)}" role="button" tabindex="0"
+          aria-label="${esc(county.name)} County, fictional usage ${number(value, 1)} ${unitLabel}"
+          aria-pressed="${county.name === selectedName}">
+          <title>${esc(county.name)} County</title>
         </path>`;
       }).join('')}
-    </svg>` : `<div class="empty">${esc(countyLoadError || 'Loading the Utah map…')}</div>`;
+    </svg>` : `<div class="empty">${esc(countyLoadError || 'Loading Utah counties…')}</div>`;
 
-  return pageIntro('', 'Explore Utah', 'Select a county to explore the map.') + `
-    <div class="map-hero-top">
+  return pageIntro('', 'Explore Utah', 'Select a county on the map or ranking.') + `
+    <div class="map-main-head">
       <span class="map-hero-title">Utah's 29 counties</span>
       ${resourceSwitch()}
     </div>
-    <p class="map-demo-label"><strong>Fictional example usage.</strong> These colors and numbers show how a county comparison could work. They do not represent real household consumption in Utah.</p>
-    <section class="map-hero">
-      <div class="map-hero-main">
-        ${mapSvg}
-        <div class="map-legend" aria-label="Color legend for fictional ${type} usage">
-          <div class="legend-bar ${waterMode ? 'water' : 'electricity'}"></div>
-          <div class="legend-labels"><span>Lighter · lower example use</span><span>Darker · higher example use</span></div>
+    <p class="map-demo-label"><strong>Fictional sample data.</strong> Colors and rankings demonstrate a comparison, not measured Utah county consumption.</p>
+    <section class="map-layout">
+      <div class="map-main-card">
+        <div class="map-canvas">${mapSvg}</div>
+        <div class="map-legend" aria-label="Fictional usage color scale">
+          <div class="legend-bar ${isWater ? 'water' : 'electricity'}"></div>
+          <div class="legend-labels"><span>Lighter · lower use</span><span>Darker · higher use</span></div>
         </div>
       </div>
       <aside class="card map-side-panel">
-        <span class="map-side-label">SELECTED COUNTY</span>
-        <h2>${esc(selectedName)} County</h2>
-        <div class="map-selected-stat">${selectedValue === null ? '—' : number(selectedValue, 1)}</div>
-        <p class="map-selected-unit">${unitLabel} · fictional demo</p>
-        <label class="field map-select-label"><span>Choose a county</span>
-          <select data-county-select ${!counties.length ? 'disabled' : ''}>
-            ${counties.map(c => `<option value="${esc(c.name)}" ${selectedOption(c.name, selectedName)}>${esc(c.name)} County</option>`).join('')}
-          </select>
-        </label>
-        <p class="map-side-foot">Darker counties have higher fictional usage in this example. No real county household data is being reported.</p>
+        <section class="map-selected-block" aria-live="polite">
+          <span class="map-side-label">SELECTED COUNTY</span>
+          <h2 data-selected-county>${esc(selectedName)} County</h2>
+          <div class="map-selected-stat" data-selected-value>${selectedValue === null ? '—' : number(selectedValue, 1)}</div>
+          <p class="map-selected-unit">${unitLabel} · fictional example</p>
+          <label class="field map-select-label"><span>Choose a county</span>
+            <select data-county-select ${!counties.length ? 'disabled' : ''}>
+              ${counties.map(c => `<option value="${esc(c.name)}" ${selectedOption(c.name, selectedName)}>${esc(c.name)} County</option>`).join('')}
+            </select>
+          </label>
+        </section>
+        <section class="map-ranking-block" aria-label="All county rankings, fictional data">
+          <div class="map-ranking-head"><h3>County ranking</h3><span>${unitLabel}</span></div>
+          <ol class="county-ranking-list">
+            ${ranked.map((county, index) => `<li>
+              <button type="button" class="county-ranking-item ${county.name === selectedName ? 'selected' : ''}"
+                data-leaderboard-region="${esc(county.name)}"
+                ${county.name === selectedName ? 'aria-current="true"' : ''}>
+                <span class="county-ranking-rank">${index + 1}</span>
+                <span class="county-ranking-name">${esc(county.name)}</span>
+                <strong class="county-ranking-value">${number(county.value, 1)}</strong>
+              </button>
+            </li>`).join('')}
+          </ol>
+        </section>
       </aside>
     </section>
-    ${renderRegionalLeaderboard(counties, selectedName)}
-    <details class="card map-sources"><summary>Map sources & details</summary>
-      <p class="fineprint">County outlines: <a href="https://gis.utah.gov/products/sgid/boundaries/county/" target="_blank" rel="noopener noreferrer">State of Utah SGID</a>. Usage values are generated sample data, unrelated to bills or real community participation. ${waterMode ? 'The statewide USGS historical water reference is not a county measurement.' : 'The EIA statewide electricity reference is not a county measurement.'}</p>
-    </details>`;
+    <details class="card map-sources"><summary>Map data & methodology</summary>
+      <p class="fineprint">County boundaries: <a href="https://gis.utah.gov/products/sgid/boundaries/county/" target="_blank" rel="noopener noreferrer">State of Utah SGID</a>. All county values are fictional, are unrelated to actual utility bills, and are not a survey of Utah residents.</p>
+    </details>
+  `;
+}
+
+// Update selection in place. Rebuilding the whole page on every map click
+// caused the flashing/refreshing effect and interrupted keyboard focus.
+function selectMapCounty(name) {
+  const chosen = countyMap?.counties.find(county => county.name === name);
+  if (!chosen) return;
+  state.region = chosen.name;
+  saveState(false);
+  if (state.page !== 'map') return;
+
+  const title = app.querySelector('[data-selected-county]');
+  const value = app.querySelector('[data-selected-value]');
+  const dropdown = app.querySelector('[data-county-select]');
+  if (title) title.textContent = chosen.name + ' County';
+  if (value) value.textContent = number(demoCountyUsage(chosen, state.resource), 1);
+  if (dropdown) dropdown.value = chosen.name;
+
+  app.querySelectorAll('svg.utah-map [data-region]').forEach(path => {
+    const active = path.dataset.region === name;
+    path.classList.toggle('active', active);
+    path.setAttribute('aria-pressed', String(active));
+  });
+  app.querySelectorAll('[data-leaderboard-region]').forEach(button => {
+    const active = button.dataset.leaderboardRegion === name;
+    button.classList.toggle('selected', active);
+    if (active) button.setAttribute('aria-current', 'true');
+    else button.removeAttribute('aria-current');
+  });
 }
 
 function renderRegionalLeaderboard(counties, selectedName) {
@@ -730,85 +768,53 @@ async function loadCountyMap() {
 }
 function renderRipple() {
   const isWater = state.resource === 'water';
-
-  const destinationCards = isWater
-    ? [
-        { title: 'Great Salt Lake', text: 'Water conservation can support efforts to protect Utah watersheds, although individual household reductions do not automatically reach the lake.' },
-        { title: 'Rivers & reservoirs', text: 'Reducing household demand can help communities manage limited water supplies.' },
-        { title: 'Your household', text: 'Smaller changes can show up in future bills and build better conservation habits.' }
-      ]
-    : [
-        { title: 'Utah power demand', text: 'Using less electricity can reduce household demand and make your future bills easier to manage.' },
-        { title: 'Your home', text: 'Lower standby or unnecessary use helps cut waste from everyday devices.' },
-        { title: 'Long-term habits', text: 'Small electricity changes are easier to keep when you can see the effect over time.' }
-      ];
-
-  const tipIds = isWater
-    ? ['shorter-showers', 'hidden-leaks', 'outdoor-watering']
+  const destinations = isWater ? [
+    {title:'Great Salt Lake', text:'Water conservation matters to Utah, but household reductions do not automatically flow to the lake.'},
+    {title:'Rivers & reservoirs', text:'Lower demand can help communities manage limited water supplies.'},
+    {title:'Your household', text:'Using less water may lower your bill and build lasting habits.'}
+  ] : [
+    {title:'Utah’s power grid', text:'Reducing unnecessary usage can lower household demand.'},
+    {title:'Your home', text:'Turning off unused devices can make bills easier to manage.'},
+    {title:'Everyday habits', text:'Tracking your changes helps you identify what works.'}
+  ];
+  const tipIds = isWater ? ['shorter-showers', 'hidden-leaks', 'outdoor-watering']
     : ['idle-power', 'full-laundry'];
+  const tips = tipIds.map(id => ACTION_CATALOG.find(action => action.id === id)).filter(Boolean);
 
-  const tips = tipIds
-    .map(id => ACTION_CATALOG.find(item => item.id === id))
-    .filter(Boolean);
-
-  return pageIntro('', 'Your Impact', 'See why reducing resource use matters.') + `
-    <div class="card-head">
-      <div></div>
-      ${resourceSwitch()}
-    </div>
-
-    <section class="impact-destinations">
-      ${destinationCards.map(card => `
-        <article class="card impact-card">
-          <h2>${esc(card.title)}</h2>
-          <p>${esc(card.text)}</p>
-        </article>
-      `).join('')}
+  return pageIntro('', 'Your Impact', 'Where using less can make a difference.') + `
+    <div class="save-page-header">${resourceSwitch()}</div>
+    <section class="impact-top-grid">
+      ${destinations.map(item => `<article class="card impact-card">
+        <h2>${esc(item.title)}</h2><p>${esc(item.text)}</p>
+      </article>`).join('')}
     </section>
-
-    <section class="card ripple-simulator">
+    <section class="card ripple-simulator impact-panel">
       <h2>${isWater ? 'Water savings calculator' : 'Electricity savings calculator'}</h2>
-      <p class="muted">${isWater ? 'Estimate how shorter showers could reduce water use.' : 'Estimate how reducing standby power could lower electricity use.'}</p>
+      <p class="muted">${isWater ? 'See how a shorter shower could change water usage.' : 'Estimate the electricity saved by unplugging standby devices.'}</p>
       ${isWater ? `
         ${slider('Current shower length', 'current', 1, 30, simulation.current, 'min')}
         ${slider('New shower length', 'target', 1, 30, simulation.target, 'min')}
         ${slider('People showering daily', 'household', 1, 30, simulation.household ?? state.profile.residents, 'people')}
         ${slider('Showerhead flow', 'flow', .5, 5, simulation.flow, 'gal/min', .1)}
-
         <div class="grid two impact-results">
-          <div>
-            <div class="stat-label">Estimated monthly savings</div>
-            <div class="stat-value" id="sim-monthly">—</div>
-            <small>gallons / 30 days</small>
-          </div>
-          <div>
-            <div class="stat-label">Estimated yearly savings</div>
-            <div class="stat-value" id="sim-yearly">—</div>
-            <small>gallons / 365 days</small>
-          </div>
+          <div><span class="stat-label">Estimated 30-day change</span><div class="stat-value" id="sim-monthly">—</div><small>gallons</small></div>
+          <div><span class="stat-label">Estimated annual change</span><div class="stat-value" id="sim-yearly">—</div><small>gallons</small></div>
         </div>
         <p class="fineprint" id="sim-explanation"></p>
-      ` : `
-        ${renderActionEstimate('idle-power')}
-      `}
+      ` : renderActionEstimate('idle-power')}
     </section>
-
-    <details class="card impact-tips">
-      <summary>Ways to save</summary>
-      <div class="grid three">
-        ${tips.map(item => `
-          <article class="tip ripple-tip">
-            <h3>${esc(item.title)}</h3>
-            <p>${esc(item.action)}</p>
-          </article>
-        `).join('')}
-      </div>
-    </details>
-
-    <details class="card ripple-goals">
-      <summary>Set a monthly reduction goal</summary>
-      ${renderMeasuredGoals().replace(/^<section class="card feature-section">|<\/section>$/g, '')}
-    </details>
+    <div class="impact-bottom-grid">
+      <section class="card impact-panel">
+        <h2>Ways to save</h2>
+        <div class="impact-tip-grid">
+          ${tips.map(item => `<article class="tip ripple-tip"><h3>${esc(item.title)}</h3><p>${esc(item.action)}</p></article>`).join('')}
+        </div>
+      </section>
+      <section class="card impact-panel">
+        <h2>Set a monthly goal</h2>
+        ${renderMeasuredGoals().replace(/^<section class="card feature-section">|<\/section>$/g, '')}
+      </section>
+    </div>
   `;
 }
 
@@ -1216,6 +1222,7 @@ app.addEventListener("click", event => {
     editingId = null;
     saveState();
     renderShell();
+    if (state.page === 'ripple') updateSimulation();
     return;
   }
   const edit = event.target.closest("[data-edit]");
@@ -1253,11 +1260,8 @@ app.addEventListener("click", event => {
   const span = event.target.closest("[data-span]");
   if (span) { state.chartSpan = span.dataset.span; saveState(); renderShell(); return; }
   const leaderboardRegion = event.target.closest("[data-leaderboard-region]");
-  if (leaderboardRegion && countyMap?.counties.some(county => county.name === leaderboardRegion.dataset.leaderboardRegion)) {
-    state.region = leaderboardRegion.dataset.leaderboardRegion;
-    saveState();
-    renderShell();
-    app.querySelector('[data-leaderboard-region="' + CSS.escape(state.region) + '"]')?.focus({ preventScroll: true });
+  if (leaderboardRegion) {
+    selectMapCounty(leaderboardRegion.dataset.leaderboardRegion);
     return;
   }
   const actionAdd = event.target.closest('[data-action-add]');
@@ -1291,11 +1295,8 @@ app.addEventListener("click", event => {
     return;
   }
   const region = event.target.closest("[data-region]");
-  if (region && countyMap?.counties.some(county => county.name === region.dataset.region)) {
-    state.region = region.dataset.region;
-    saveState();
-    renderShell();
-    app.querySelector('[data-region="' + CSS.escape(state.region) + '"]')?.focus({ preventScroll: true });
+  if (region) {
+    selectMapCounty(region.dataset.region);
     return;
   }
 });
@@ -1328,18 +1329,12 @@ app.addEventListener("keydown", event => {
   if ((event.key === "Enter" || event.key === " ") && event.target.matches("svg [data-region]") &&
       countyMap?.counties.some(county => county.name === event.target.dataset.region)) {
     event.preventDefault();
-    state.region = event.target.dataset.region;
-    saveState();
-    renderShell();
-    app.querySelector('[data-region="' + CSS.escape(state.region) + '"]')?.focus({ preventScroll: true });
+    selectMapCounty(event.target.dataset.region);
   }
 });
 app.addEventListener("change", event => {
   if (event.target.matches('[data-county-select]') && countyMap?.counties.some(county => county.name === event.target.value)) {
-    state.region = event.target.value;
-    saveState();
-    renderShell();
-    app.querySelector('[data-county-select]')?.focus({ preventScroll: true });
+    selectMapCounty(event.target.value);
   }
 });
 app.addEventListener("submit", event => {
