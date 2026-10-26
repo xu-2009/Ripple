@@ -328,3 +328,165 @@ small, .muted { color: var(--muted); }
   .page-home .hero-flow-demo { min-height: 390px; }
   .page-home .hero-flow-demo .hero-copy { padding-bottom: 24px; }
 }
+
+
+/* ---------- Ripples visual redesign: October 2026 ---------- */
+.content { max-width: 1580px; }
+.content > .intro, .content > section, .content > .section-spotlight,
+.content > .usage-layout, .content > .utility-details-row, .content > details {
+  animation: ripple-page-in .34s ease both;
+}
+@keyframes ripple-page-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.nav-button { position: relative; }
+.nav-button.active { background: rgba(134,236,234,.2); border-color: rgba(134,236,234,.37); box-shadow: inset 3px 0 0 #94eef0; }
+.nav-button.active svg { color: #bafffc; filter: drop-shadow(0 0 4px rgba(130,250,250,.38)); }
+.intro { margin-bottom: 24px; }
+.intro h1 { font-size: clamp(32px, 4vw, 49px); }
+.section-spotlight { display:flex; align-items:center; gap: 14px; border: 1px solid #cde6e7; background: linear-gradient(95deg,#e5f6f5,#ffffff); padding:14px 18px; border-radius:18px; margin: 10px 0 22px; }
+.section-spotlight > div:not(.switch) { display:grid; gap:2px; }
+.section-spotlight small { font-size:12px; color: var(--muted); }
+.section-spotlight .switch { margin-left:auto; }
+.spotlight-icon { display:grid; place-items:center; font-size:26px; width:46px; height:46px; background:white; border-radius:15px; box-shadow: 0 5px 15px rgba(7,62,77,.07); }
+
+/* HOME */
+.home-hero { min-height: 480px; background: linear-gradient(125deg,#07374a,#0b6374); }
+.home-hero::before { opacity:.45; }
+.home-hero .hero-copy { max-width: 750px; min-height:480px; padding:clamp(24px,3.7vw,54px); padding-bottom:40px; }
+.home-kicker { font-size: 12px; font-weight:750; letter-spacing:.16em; color:#bcf7fa; margin-bottom:12px; }
+.home-hero h1 { font-size:clamp(37px,4.8vw,62px); margin-bottom:10px; letter-spacing:-.04em; }
+.home-hero .hero-copy > p { font-size:14px; max-width:340px; }
+.home-water-number { font-family:Outfit,sans-serif; font-size:clamp(33px,4.5vw,58px); font-weight:600; line-height:1.15; margin: 23px 0 8px; letter-spacing:-.04em; color:#fff; text-shadow:0 2px 15px rgba(0,51,61,.35); }
+.home-water-detail { font-size:13px; max-width:380px; color:#d6fcff; margin-bottom:20px; }
+.home-hero .button.primary { background:#d7ffff; color:#07485b; }
+.home-hero .button.secondary { background:rgba(14,75,91,.46); color:white; border-color:rgba(200,255,255,.35); }
+.home-tank-disclaimer { font-size:10px; color:rgba(220,251,251,.75); margin-top:14px; }
+.home-stat-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:17px; margin-top:18px; }
+.home-stat { display:flex; align-items:center; gap:20px; min-width:0; }
+.home-stat-icon { width:58px; height:58px; flex:none; display:grid; place-items:center; font-size:28px; border-radius:18px; background:#e5f8f8; }
+.home-stat-number { font-family:Outfit,sans-serif; font-size:clamp(22px,2.5vw,32px); font-weight:600; letter-spacing:-.02em; margin-top:4px; }
+.home-comparison-note { font-size:11px; line-height:1.65; margin:15px 2px; color:var(--muted); max-width:900px; }
+.home-hero .tank-wave-crest { filter:drop-shadow(0 2px 7px rgba(210,255,255,.85)); }
+
+/* MY USAGE */
+.usage-layout { display:grid; grid-template-columns:minmax(320px,.92fr) minmax(340px,1.08fr); gap:18px; align-items:stretch; }
+.usage-layout .card { min-width:0; }
+.usage-chart { margin:0; }
+.usage-chart .chart { margin:24px 0 4px; }
+.utility-details-row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; align-items:start; margin-top:17px; }
+.utility-details-row > details { margin:0; min-width:0; }
+.utility-details-row details[open] { grid-column:span 3; }
+.usage-entry-card h2, .usage-chart h2 { font-size:24px; margin-bottom:18px; }
+
+/* EXPLORE UTAH: open map, no white panel */
+.map-hero-top { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:14px; }
+.map-hero-title { display:flex; gap:12px; align-items:center; font:600 22px Outfit,sans-serif; }
+.map-icon { font-size:27px; color:var(--teal); }
+.map-demo-label { color:#6c4e1d; background:#fff7e7; border:1px solid #efddbb; font-size:12px; line-height:1.5; padding:10px 16px; border-radius:13px; margin-bottom:13px; }
+.map-stage { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(260px,.7fr); align-items:start; gap:clamp(14px,2.5vw,35px); margin:8px 0 20px; }
+.map-canvas { position:relative; min-width:0; border-radius:26px; padding:12px 20px 16px; background:radial-gradient(circle at 48% 35%,#e5f8f6 0,#d4eeee 45%,#c4e3e5 100%); border:1px solid rgba(16,120,136,.16); }
+.page-map .utah-map { height:min(70vh,720px); width:100%; max-height:none; filter:drop-shadow(0 18px 12px rgba(14,67,79,.14)); }
+.page-map .utah-map .county { stroke:#effcf8; stroke-width:1.1; transition:filter .18s ease, stroke-width .18s ease; outline:none !important; }
+.page-map .utah-map .county:hover { filter:brightness(1.12); stroke:#164757; stroke-width:1.8; }
+.page-map .utah-map .county.active { filter:drop-shadow(0 1px 4px rgba(5,46,60,.35)); stroke:#023c50; stroke-width:3.4; }
+.page-map .utah-map .county:focus, .page-map .utah-map .county:focus-visible { outline:none !important; stroke:#07445b; stroke-width:3.6; }
+.map-gradient-legend { display:grid; grid-template-columns:1fr 1fr; column-gap:12px; row-gap:4px; max-width:440px; margin:12px auto 0; color:#325e66; font-size:11px; }
+.map-gradient-legend span:last-child { text-align:right; }
+.map-gradient-bar { grid-column:span 2; height:15px; border:1px solid #d6eeee; border-radius:99px; }
+.map-gradient-bar.water { background:linear-gradient(90deg,hsl(192 76% 86%),hsl(192 76% 31%)); }
+.map-gradient-bar.electricity { background:linear-gradient(90deg,hsl(31 76% 86%),hsl(31 76% 31%)); }
+.map-side { padding:35px clamp(17px,2vw,30px); background:linear-gradient(145deg,#074d62,#0e8291); color:white; border-radius:25px; box-shadow:0 15px 35px rgba(7,82,98,.16); }
+.map-side-label { font-size:11px; letter-spacing:.14em; color:#a9f2ed; }
+.map-side h2 { font-size:clamp(27px,3.3vw,39px); margin:10px 0 25px; }
+.map-selected-stat { font:600 clamp(45px,5vw,76px)/1 Outfit,sans-serif; color:#fff; }
+.map-selected-unit { color:#d3f7f3; font-size:13px; margin-top:12px; }
+.map-select-label { margin:28px 0 22px; }
+.map-select-label span { color:#d9f6f7; }
+.map-side-foot { font-size:12px; line-height:1.6; color:#d9f7f5; margin:0; }
+.map-side-foot strong { color:white; }
+.page-map .leaderboard-section { margin:16px 0; }
+.page-map .map-sources { margin-top:16px; }
+.page-map .leaderboard-section > summary { cursor:pointer; font-weight:700; min-height:36px; color:var(--ocean); }
+
+/* YOUR IMPACT */
+.impact-switch { max-width:830px; }
+.impact-intro { text-align:center; border-radius:28px; padding:34px 24px 26px; margin:20px 0 12px; background:linear-gradient(130deg,#e1f4f3,#f6fffc); }
+.impact-intro .impact-orb { display:grid; place-items:center; margin:0 auto 10px; background:white; width:70px; height:70px; border-radius:22px; font-size:36px; box-shadow:0 6px 20px rgba(12,106,106,.09); }
+.impact-intro h2 { margin:10px auto; max-width:650px; }
+.impact-intro p { color:var(--muted); margin:auto; max-width:510px; }
+.impact-destinations { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.impact-destination { padding:23px 19px; min-width:0; border-radius:23px; border:1px solid #d5e9e7; background:rgba(255,255,255,.83); box-shadow:var(--shadow); }
+.impact-emoji { display:grid; place-items:center; width:55px; height:55px; background:#e5f4f2; border-radius:16px; font-size:27px; margin-bottom:20px; }
+.impact-destination p { font-size:13px; color:var(--muted); margin:9px 0 0; line-height:1.6; }
+.impact-caution { font-size:11px; color:var(--muted); margin:13px 3px 25px; }
+.impact-calculator-label { color:var(--teal); letter-spacing:.12em; font-size:11px; font-weight:700; margin-bottom:12px; }
+.impact-tip-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:13px; margin:20px 0 0; }
+.impact-tip-grid .ripple-simple-tip { padding:18px; background:#eef9f8; border:1px solid #dcefeb; border-radius:15px; }
+.impact-tip-grid p { font-size:13px; color:var(--muted); }
+.page-ripple .ripple-simulator { max-width:none; }
+.page-ripple .ripple-output { margin-top:22px; padding-top:18px; border-top:1px solid var(--line); }
+.page-ripple .impact-tips, .page-ripple .ripple-goal-details { margin-top:15px; }
+.page-ripple .impact-tips > summary, .page-ripple .ripple-goal-details > summary { font-weight:700; cursor:pointer; min-height:42px; color:var(--ocean); }
+
+/* GRAPHICAL PROFILE */
+.profile-visual-card { max-width:900px; padding:clamp(20px,3.5vw,42px); }
+.profile-visual-card h2 { font-size:clamp(22px,3vw,30px); }
+.residents-picker { display:flex; align-items:center; gap:13px; margin:18px 0 36px; }
+.residents-graphic { display:grid; place-items:center; background:#e2f6f5; height:58px; width:58px; border-radius:18px; font-size:29px; margin-right:8px; }
+.residents-step { width:45px; height:45px; border:1px solid #bddde0; border-radius:13px; background:#e5f7f7; color:var(--ocean); font-size:26px; font-weight:600; }
+.residents-picker input { font:600 28px Outfit,sans-serif; text-align:center; width:80px; height:48px; border:1px solid #c4dfe1; border-radius:13px; color:var(--ocean); background:white; }
+.profile-question { margin:0 0 17px; }
+.home-choice-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.home-choice { display:grid; justify-items:center; gap:10px; padding:21px 10px; color:var(--ocean); background:#f6fbfc; border:2px solid #dcebed; border-radius:18px; font-weight:650; }
+.home-choice-icon { font-size:35px; line-height:1.4; }
+.home-choice.selected { background:#e7f9f6; border-color:var(--teal); box-shadow:0 0 0 2px rgba(34,150,145,.1); }
+.home-choice:hover { transform:translateY(-2px); }
+.profile-extra-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px; margin:28px 0 20px; }
+.profile-options { display:grid; gap:11px; padding:16px 0; }
+.profile-save { padding:13px 24px; margin-top:7px; }
+.page-profile .profile-data { max-width:900px; margin-top:17px; }
+.page-profile .profile-data > summary { cursor:pointer; font-weight:700; min-height:40px; }
+
+@media(max-width:1100px) {
+  .usage-layout { grid-template-columns:1fr; }
+  .map-stage { grid-template-columns:minmax(0,1.2fr) minmax(250px,.8fr); }
+  .impact-destinations { gap:10px; }
+}
+@media(max-width:800px) {
+  .nav-button.active { box-shadow: inset 0 3px 0 #94eef0; }
+  .home-stat-row, .map-stage { grid-template-columns:1fr; }
+  .utility-details-row { grid-template-columns:1fr; }
+  .utility-details-row details[open] { grid-column:span 1; }
+  .page-map .utah-map { height:min(72vh,630px); }
+  .map-side { padding:25px; }
+  .impact-destinations { grid-template-columns:1fr; }
+  .impact-destination { display:grid; grid-template-columns:55px 1fr; column-gap:15px; }
+  .impact-destination h3 { align-self:center; }
+  .impact-destination p { grid-column:2; }
+  .impact-emoji { margin:0; }
+  .impact-tip-grid { grid-template-columns:1fr; }
+}
+@media(max-width:560px) {
+  .content { padding-left:12px; padding-right:12px; }
+  .home-hero { min-height:520px; }
+  .home-hero .hero-copy { min-height:520px; padding:24px; }
+  .home-water-number { font-size:34px; }
+  .home-stat { padding:17px; }
+  .map-canvas { padding:10px 8px; }
+  .page-map .utah-map { height:auto; max-height:560px; }
+  .map-hero-top { align-items:flex-start; }
+  .map-hero-top .switch { width:auto; }
+  .section-spotlight { padding:12px 10px; gap:8px; }
+  .section-spotlight .switch button { padding:8px 9px; }
+  .spotlight-icon { width:38px; height:38px; font-size:21px; }
+  .home-choice-grid { gap:7px; }
+  .home-choice { font-size:11px; padding:14px 3px; }
+  .home-choice-icon { font-size:27px; }
+  .profile-extra-fields { grid-template-columns:1fr; }
+  .residents-picker { gap:8px; }
+  .residents-graphic { margin-right:0; }
+  .residents-picker input { width:65px; }
+  .home-stat-row { gap:11px; }
+  .home-stat-icon { width:49px; height:49px; }
+}
+@media(prefers-reduced-motion:reduce) { .content > * { animation:none !important; } }
+.reduce-motion .content > * { animation:none !important; }
