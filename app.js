@@ -307,10 +307,28 @@ function renderHome() {
     : null;
   const waterDifference = usageDifference(water);
   const electricityDifference = usageDifference(electricity);
+  // This tank is an actual data visualization, not decorative fill.
+  // The same daily normalization used by the chart keeps bill lengths comparable.
+  // A chosen monthly goal takes priority; otherwise compare with this household's
+  // highest recorded daily water usage. Never infer storage or measured savings.
+  const waterBills = resourceEntries('water');
   const waterGoal = Number(state.profile.waterGoal);
-  const tankLevel = water.latest && waterGoal > 0
-    ? Math.max(10, Math.min(90, monthlyEquivalent(water.latest) / waterGoal * 100))
-    : 50; // Preview animation if the user has not set a monthly goal.
+  const peakDailyWaterUse = waterBills.length
+    ? Math.max(...waterBills.map(entry => daily(entry)))
+    : 0;
+  const tankRatio = !water.latest ? null
+    : waterGoal > 0
+      ? monthlyEquivalent(water.latest) / waterGoal
+      : peakDailyWaterUse > 0
+        ? daily(water.latest) / peakDailyWaterUse
+        : 0;
+  const tankLevel = tankRatio === null ? 0
+    : Math.max(0, Math.min(100, tankRatio * 100));
+  const tankPercentage = tankRatio === null ? null : Math.round(tankRatio * 100);
+  const tankReference = waterGoal > 0 ? 'of monthly water goal' : 'of your highest recorded daily use';
+  const tankMeterLabel = water.latest
+    ? 'Water level: ' + number(tankPercentage) + '% ' + tankReference
+    : 'No water bills added';
 
   const waterHeadline = waterDifference === null ? 'Your water, at a glance'
     : waterDifference > 0 ? number(waterDifference, 0) + ' gal less'
@@ -321,10 +339,13 @@ function renderHome() {
     : number(Math.abs(waterChange), 1) + '% ' +
       (waterChange < 0 ? 'lower' : waterChange > 0 ? 'higher' : 'unchanged') +
       ' daily usage than your previous bill';
-  const goalText = water.latest && waterGoal > 0
-    ? number(monthlyEquivalent(water.latest), 0) + ' gal monthly equivalent · ' +
-      number(monthlyEquivalent(water.latest) / waterGoal * 100, 0) + '% of your goal'
-    : 'Water display is illustrative, not a storage measurement';
+  const goalText = !water.latest
+    ? 'Enter your first water bill to fill the tank.'
+    : waterGoal > 0
+      ? number(monthlyEquivalent(water.latest), 0) + ' gal/month · ' +
+        number(tankPercentage) + '% of your ' + number(waterGoal, 0) + ' gal goal'
+      : number(daily(water.latest), 1) + ' gal/day · ' +
+        number(tankPercentage) + '% of your highest recorded daily use';
 
   const electricSub = electricChange === null
     ? 'Add two bills to compare'
@@ -360,6 +381,11 @@ function renderHome() {
             <rect x="8" y="8" width="584" height="404" rx="24" fill="url(#tank-glass-fill)" stroke="#c9fdff" stroke-opacity=".34" stroke-width="2"/>
           </svg>
         </div>
+      </div>
+      <div class="tank-reading" role="status" aria-label="${esc(tankMeterLabel)}">
+        <span class="tank-reading-title">WATER LEVEL</span>
+        <strong class="tank-reading-percent">${tankPercentage === null ? '—' : number(tankPercentage) + '%'}</strong>
+        <span class="tank-reading-caption">${esc(water.latest ? tankReference : 'Add a water bill')}</span>
       </div>
       <div class="hero-overlay-copy">
         <span class="home-kicker">RIPPLES · WATER & ELECTRICITY</span>
@@ -967,7 +993,17 @@ function drawWaterWave(timestamp = 0) {
   if (!body || !crest || !shine) { waterWave.frame = 0; return; }
 
   const motionOff = reducedMotion();
-  const fillFraction = Math.max(0.10, Math.min(.9, parseFloat(tank.style.getPropertyValue('--tank-level')) / 100 || .5));
+  const rawFill = parseFloat(tank.style.getPropertyValue('--tank-level'));
+  const fillFraction = Number.isFinite(rawFill) ? Math.max(0, Math.min(1, rawFill / 100)) : 0;
+  // An empty record or a recorded zero must show an empty tank, not fake water.
+  if (fillFraction === 0) {
+    body.setAttribute('d', '');
+    crest.setAttribute('d', '');
+    shine.setAttribute('d', '');
+    waterWave.frame = 0;
+    previousWaveFrame = 0;
+    return;
+  }
   const base = 15 + (1 - fillFraction) * 390;
   const dt = previousWaveFrame ? Math.min(1.65, Math.max(.6, (timestamp - previousWaveFrame) / 16.67)) : 1;
   previousWaveFrame = timestamp;
