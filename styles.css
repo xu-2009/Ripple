@@ -490,3 +490,327 @@ small, .muted { color: var(--muted); }
 }
 @media(prefers-reduced-motion:reduce) { .content > * { animation:none !important; } }
 .reduce-motion .content > * { animation:none !important; }
+
+/* ---------- Uniform page formatting ---------- */
+
+.intro {
+  margin-bottom: 18px;
+}
+
+.intro h1 {
+  font-size: 30px;
+  line-height: 1.08;
+  margin: 0 0 6px;
+}
+
+.intro p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.card h2 {
+  margin: 0 0 10px;
+}
+
+/* ---------- Home / tank ---------- */
+
+.home-hero {
+  display: grid;
+  grid-template-columns: 1.08fr .92fr;
+  gap: 22px;
+  align-items: center;
+  overflow: hidden;
+}
+
+.hero-tank-shell {
+  position: relative;
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-tank {
+  width: 100%;
+  max-width: 520px;
+  aspect-ratio: 1.25 / 1;
+  position: relative;
+  transform: perspective(1200px) rotateX(2deg);
+}
+
+.hero-tank-water {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.tank-wave-back { opacity: 0.56; }
+.tank-wave-front { opacity: 0.98; }
+.tank-wave-crest { opacity: 0.92; }
+.tank-glass { backdrop-filter: blur(4px); }
+
+.tank-bubbles circle {
+  fill: rgba(224,255,255,.72);
+  animation: bubble-rise 6s linear infinite;
+}
+
+.tank-bubbles circle:nth-child(2) { animation-delay: 1s; }
+.tank-bubbles circle:nth-child(3) { animation-delay: 2.1s; }
+.tank-bubbles circle:nth-child(4) { animation-delay: 1.6s; }
+.tank-bubbles circle:nth-child(5) { animation-delay: 2.8s; }
+
+@keyframes bubble-rise {
+  0% { transform: translateY(0); opacity: 0; }
+  10% { opacity: .7; }
+  100% { transform: translateY(-90px); opacity: 0; }
+}
+
+.home-kicker {
+  font-size: 11px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.home-water-number {
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.05;
+  margin-top: 14px;
+}
+
+.home-water-detail {
+  margin-top: 8px;
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.home-goal-line {
+  margin-top: 14px;
+  font-size: 14px;
+  color: var(--text);
+  opacity: .88;
+}
+
+.home-stat-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.home-stat {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.home-stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  background: rgba(53,194,204,.12);
+}
+
+.home-stat-number {
+  font-size: 26px;
+  font-weight: 750;
+  line-height: 1.1;
+}
+
+/* ---------- Map page ---------- */
+
+.map-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, .7fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.map-hero-main {
+  background: linear-gradient(180deg, rgba(213,249,250,.7), rgba(232,248,247,.86));
+  border: 1px solid rgba(9,91,120,.10);
+  border-radius: 28px;
+  padding: 18px;
+  min-height: 460px;
+}
+
+.map-side-panel {
+  min-height: 460px;
+}
+
+.map-metric-group {
+  display: grid;
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.map-legend {
+  margin-top: 22px;
+}
+
+.legend-title {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.legend-bar {
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #bdeff2 0%, #55bccc 35%, #1e96b2 65%, #0e5f78 100%);
+}
+
+.legend-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.top-counties-card {
+  margin-top: 18px;
+}
+
+.top-county-list {
+  display: grid;
+  gap: 10px;
+}
+
+.top-county-item {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(9,91,120,.12);
+  background: white;
+  border-radius: 18px;
+  padding: 12px 14px;
+  cursor: pointer;
+}
+
+.top-county-item.selected {
+  border-color: rgba(9,91,120,.35);
+  box-shadow: 0 0 0 2px rgba(53,194,204,.15);
+}
+
+.top-rank {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.top-name {
+  font-weight: 650;
+}
+
+/* ---------- Impact page ---------- */
+
+.impact-destinations {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.impact-card p {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.impact-results {
+  margin-top: 18px;
+}
+
+.impact-tips,
+.ripple-goals {
+  margin-top: 16px;
+}
+
+/* ---------- Profile ---------- */
+
+.profile-question {
+  margin-top: 24px;
+}
+
+.home-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.home-choice {
+  border: 1px solid rgba(9,91,120,.12);
+  background: white;
+  border-radius: 18px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  min-height: 104px;
+}
+
+.home-choice.selected {
+  border-color: rgba(9,91,120,.32);
+  box-shadow: 0 0 0 2px rgba(53,194,204,.15);
+  background: rgba(237,251,251,.95);
+}
+
+.home-choice-icon {
+  font-size: 28px;
+}
+
+.profile-data-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+/* ---------- Remove old clutter ---------- */
+
+.tank-motion,
+.tilt-toggle,
+.motion-hint {
+  display: none !important;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 900px) {
+  .home-hero,
+  .map-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .impact-destinations {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .home-stat-row {
+    grid-template-columns: 1fr;
+  }
+
+  .intro h1 {
+    font-size: 26px;
+  }
+
+  .home-water-number {
+    font-size: 32px;
+  }
+
+  .map-hero-main,
+  .map-side-panel {
+    min-height: auto;
+  }
+}
